@@ -1,8 +1,8 @@
 #!/bin/bash -x
+# Run as root
 
 mkdir -p /snappydata/downloads
 cd /snappydata/downloads
-
 
 printf "https://github.com/SnappyDataInc/snappydata/releases/download/v0.6/snappydata-0.6-bin.tar.gz" > snappydata-url.txt
 printf "https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.6/snappydata-zeppelin-0.6.jar" > interpreter-url.txt

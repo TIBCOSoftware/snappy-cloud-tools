@@ -7,6 +7,7 @@ mkdir -p /snappydata/downloads
 cd /snappydata/downloads
 printf "Moved to downloads dir $?\n" >> status.log
 
+# Initialize various variables.
 ZEPPELIN_DIR=zeppelin-0.6.1-bin-netinst
 
 SNAPPYDATA_URL=`cat snappydata-url.txt`
@@ -21,6 +22,7 @@ SNAPPY_INTERPRETER_DIR=${ZEPPELIN_DIR}/interpreter/snappydata
 
 NOTEBOOK_URL=`cat notebook-url.txt`
 
+# Edit /etc/hosts so that the cluster is available outside the VPC.
 if [[ ! -e /etc/hosts.orig ]]; then
   mv /etc/hosts /etc/hosts.orig
   printf "Backed up /etc/hosts $?\n" >> status.log
@@ -32,14 +34,13 @@ printf "\n${PRIVATE_IP} ${PUBLIC_HOSTNAME} \n" >> /etc/hosts
 printf "${PRIVATE_IP} localhost \n\n" >> /etc/hosts
 printf "Modified /etc/hosts $?\n" >> status.log
 
+# Generate ssh keys for passwordless-ssh
 mkdir -p ~/.ssh
 if [[ ! -e ~/.ssh/id_rsa ]]; then
   ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
   printf "Enabled passwordless-ssh $?\n" >> status.log
 fi
-
-# ----------------------------------
 
 # Download and extract snappydata distribution
 if [[ ! -d ${SNAPPYDATA_DIR} ]]; then
@@ -55,7 +56,9 @@ wget ${NOTEBOOK_URL}
 tar -xf notebook.tar.gz
 printf "Extracted notebook $?\n" >> status.log
 
+# Copy the notebook to Zeppelin and update the local hostname.
 cp -R notebook/* ${ZEPPELIN_DIR}/notebook/
+find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${PUBLIC_HOSTNAME}/g"
 
 # Configure snappydata cluster
 printf "${PUBLIC_HOSTNAME} -peer-discovery-address=${PUBLIC_HOSTNAME} -jmx-manager=true -jmx-manager-start=true\n  "  > ${SNAPPYDATA_DIR}/conf/locators
@@ -63,6 +66,7 @@ printf "${PUBLIC_HOSTNAME} -client-bind-address=${PUBLIC_HOSTNAME} -locators=${P
 printf "${PUBLIC_HOSTNAME} -client-bind-address=${PUBLIC_HOSTNAME} -locators=${PUBLIC_HOSTNAME}:10334 -client-port=1529\n" >> ${SNAPPYDATA_DIR}/conf/servers
 printf "${PUBLIC_HOSTNAME} -locators=${PUBLIC_HOSTNAME}:10334 -zeppelin.interpreter.enable=true \n" > ${SNAPPYDATA_DIR}/conf/leads
 
+# Download interpreter jar and copy the relevant jars where needed.
 if [[ ! -e ${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ]]; then
   wget ${INTERPRETER_URL}
   printf "Downloaded Zeppelin Interpreter for SnappyData $?\n" >> status.log
@@ -83,8 +87,6 @@ fi
 # Start the single node snappydata cluster
 bash ${SNAPPYDATA_DIR}/sbin/snappy-start-all.sh
 printf "Started SnappyData cluster $?\n" >> status.log
-
-find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${PUBLIC_HOSTNAME}/g"
 
 # Start Apache Zeppelin server
 bash ${ZEPPELIN_DIR}/bin/zeppelin-daemon.sh start
