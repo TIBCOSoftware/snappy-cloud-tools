@@ -29,7 +29,7 @@ cat /etc/hosts.orig | grep -v 127.0.0.1 > /etc/hosts
 PRIVATE_IP=`wget -q -O - http://169.254.169.254/latest/meta-data/local-ipv4`
 PUBLIC_HOSTNAME=`wget -q -O - http://169.254.169.254/latest/meta-data/public-hostname`
 printf "\n${PRIVATE_IP} ${PUBLIC_HOSTNAME} \n" >> /etc/hosts
-printf "\n${PRIVATE_IP} localhost \n" >> /etc/hosts
+printf "${PRIVATE_IP} localhost \n\n" >> /etc/hosts
 printf "Modified /etc/hosts $?\n" >> status.log
 
 mkdir -p ~/.ssh
