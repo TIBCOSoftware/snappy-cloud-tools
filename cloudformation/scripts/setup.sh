@@ -1,8 +1,6 @@
 #!/bin/bash -x
 # SnappyData CloudFormation script
 
-printf "\n# `date` -------------------------------------------------- #\n" >> status.log
-
 mkdir -p /snappydata/downloads
 cd /snappydata/downloads
 printf "Moved to downloads dir $?\n" >> status.log
@@ -85,11 +83,19 @@ if [[ ! -e ${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ]]; then
 fi
 
 # Start the single node snappydata cluster
-bash ${SNAPPYDATA_DIR}/sbin/snappy-start-all.sh
-printf "Started SnappyData cluster $?\n" >> status.log
+bash ${SNAPPYDATA_DIR}/sbin/snappy-start-all.sh > cluster-status.log
+RUNNING=`grep -ic running cluster-status.log`
+
+printf "Started SnappyData cluster, running ${RUNNING}\n" >> status.log
+
+if [[ ${RUNNING} -ne 4 ]]; then
+  exit 1
+fi
 
 # Start Apache Zeppelin server
 bash ${ZEPPELIN_DIR}/bin/zeppelin-daemon.sh start
-printf "Started Zeppelin server $?\n" >> status.log
+CLUSTER_STARTED=`echo $?`
 
+printf "Started Zeppelin server ${CLUSTER_STARTED}\n" >> status.log
 
+exit ${CLUSTER_STARTED}
