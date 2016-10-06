@@ -61,7 +61,7 @@ find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${P
 # Configure snappydata cluster
 printf "${PUBLIC_HOSTNAME} -peer-discovery-address=${PUBLIC_HOSTNAME} -jmx-manager=true -jmx-manager-start=true\n  "  > ${SNAPPYDATA_DIR}/conf/locators
 printf "${PUBLIC_HOSTNAME} -client-bind-address=${PUBLIC_HOSTNAME} -locators=${PUBLIC_HOSTNAME}:10334 -client-port=1528\n" > ${SNAPPYDATA_DIR}/conf/servers
-printf "${PUBLIC_HOSTNAME} -client-bind-address=${PUBLIC_HOSTNAME} -locators=${PUBLIC_HOSTNAME}:10334 -client-port=1529\n" >> ${SNAPPYDATA_DIR}/conf/servers
+# printf "${PUBLIC_HOSTNAME} -client-bind-address=${PUBLIC_HOSTNAME} -locators=${PUBLIC_HOSTNAME}:10334 -client-port=1529\n" >> ${SNAPPYDATA_DIR}/conf/servers
 printf "${PUBLIC_HOSTNAME} -locators=${PUBLIC_HOSTNAME}:10334 -zeppelin.interpreter.enable=true \n" > ${SNAPPYDATA_DIR}/conf/leads
 printf "# `date` Configured SnappyData cluster $?\n" >> status.log
 
