@@ -89,7 +89,7 @@ RUNNING=`grep -ic running cluster-status.log`
 
 printf "# `date` Started SnappyData cluster, running ${RUNNING}\n" >> status.log
 
-if [[ ${RUNNING} -ne 4 ]]; then
+if [[ ${RUNNING} -ne 3 ]]; then
   exit 1
 fi
 
