@@ -65,7 +65,7 @@ XMX_VALUE=`grep ${INST_TYPE} server-memory.txt | grep -o "[0-9]*$"`
 if [[ $? -ne 0 ]]; then
   XMX_OPT=""
 else
-  XMX_OPT="-J-Xmx=${XMX_VALUE}g"
+  XMX_OPT="-J-Xmx${XMX_VALUE}g"
 fi
 
 # Configure snappydata cluster
@@ -83,7 +83,7 @@ if [[ ! -e ${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ]]; then
   printf "# `date` Created directory for Zeppelin SnappyData Interpreter $?\n" >> status.log
 
   cp ${INTERPRETER_JAR_NAME} ${SNAPPYDATA_DIR}/jars/
-  printf "Copied interpreter jar to SnappyData jars dir $?\n" >> status.log
+  printf "# `date` Copied interpreter jar to SnappyData jars dir $?\n" >> status.log
 
   cp -a ${SNAPPYDATA_DIR}/jars/. ${SNAPPY_INTERPRETER_DIR}/
   printf "# `date` Copied SnappyData jars to interpreter directory $?\n" >> status.log
