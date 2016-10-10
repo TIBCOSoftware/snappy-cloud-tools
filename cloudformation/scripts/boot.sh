@@ -17,9 +17,9 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Update the urls for various artifacts and scripts.
-# Commit SHA 3d0f768c98d4deebd07ebd94f7dac9c7768edd67
+# Commit SHA eeaf8df94a4056a1037ba693e30d52ad997035e5
 printf "https://github.com/SnappyDataInc/snappy-poc/releases/download/0.6-cf/snappydata-0.6.1-SNAPSHOT-bin.tar.gz" > snappydata-url.txt
-# Commit SHA 830cadbf0606758a97ead3100baa04f093991e29
+# Commit SHA ab1d1365e7920267a4957e8c8b6f7084bee71b98
 printf "https://github.com/SnappyDataInc/snappy-poc/releases/download/0.6-cf/snappydata-zeppelin-0.6.1-SNAPSHOT.jar" > interpreter-url.txt
 printf "https://github.com/SnappyDataInc/zeppelin-interpreter/raw/notes/examples/notebook/notebook.tar.gz" > notebook-url.txt
 printf "https://github.com/SnappyDataInc/aws-cloud/raw/master/cloudformation/scripts/setup.sh" > cf-script-url.txt
