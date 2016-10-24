@@ -108,4 +108,23 @@ CLUSTER_STARTED=`echo $?`
 
 printf "# `date` Started Zeppelin server ${CLUSTER_STARTED}\n" >> status.log
 
+# Update startup script to start the SnappyData and Apache Zeppelin server.
+wget https://github.com/SnappyDataInc/aws-cloud/raw/master/cloudformation/scripts/restart.sh
+if [[ ! -e /etc/rc.local.orig ]]; then
+  cp /etc/rc.local /etc/rc.local.orig
+  printf "#!/bin/sh -e\n\n" > /etc/rc.local
+  printf "bash /snappydata/downloads/restart.sh\n" >> /etc/rc.local
+  printf "exit 0" >> /etc/rc.local
+  printf "# `date` Added restart.sh to startup scripts.\n" >> status.log
+fi
+
+# Check if we need to shutdown the instance after some time.
+wget http://169.254.169.254/latest/dynamic/instance-identity/document
+grep 605015649645 document
+if [[ $? -eq 0 ]]; then
+  shutdown -h 120 &
+  printf "# `date` Shutting down this instance in 120 minutes from now.\n" >> status.log
+fi
+
 exit ${CLUSTER_STARTED}
+
