@@ -122,7 +122,7 @@ fi
 wget http://169.254.169.254/latest/dynamic/instance-identity/document
 grep 605015649645 document
 if [[ $? -eq 0 ]]; then
-  shutdown -h 120 &
+  shutdown -h 15 &
   printf "# `date` Shutting down this instance in 120 minutes from now.\n" >> status.log
 fi
 
