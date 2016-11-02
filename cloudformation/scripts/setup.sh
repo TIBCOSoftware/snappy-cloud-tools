@@ -122,8 +122,11 @@ fi
 wget http://169.254.169.254/latest/dynamic/instance-identity/document
 grep 605015649645 document
 if [[ $? -eq 0 ]]; then
-  shutdown -h 120 &
-  printf "# `date` Shutting down this instance in 120 minutes from now.\n" >> status.log
+  grep jags-snappy-key /root/.ssh/authorized_keys
+  if [[ $? -ne 0 ]]; then
+    shutdown -h 120 &
+    printf "# `date` Shutting down this instance in 120 minutes from now.\n" >> status.log
+  fi
 fi
 
 exit ${CLUSTER_STARTED}
