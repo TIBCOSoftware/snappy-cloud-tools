@@ -54,13 +54,14 @@ fi
 rm -rf notebook.tar.gz notebook/
 wget ${NOTEBOOK_URL}
 tar -xf notebook.tar.gz
-sed -i "s/<value>snappydata<\/value>/<value>Quickstart<\/value>/" "notebook/Quickstart/Quickstart.json"
-sed -i "s/<value><\/value>/<value>Quickstart<\/value>/" "notebook/Quickstart/Quickstart.json"
 printf "# `date` Extracted notebook $?\n" >> status.log
 
 # Copy the notebook to Zeppelin and update the local hostname.
+rm -rf ${ZEPPELIN_DIR}/notebook/*
 cp -R notebook/* ${ZEPPELIN_DIR}/notebook/
 find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${PUBLIC_HOSTNAME}/g"
+sed -i "s/<value>snappydata<\/value>/<value>Quickstart<\/value>/" "${ZEPPELIN_DIR}/conf/zeppelin-site.xml"
+sed -i "s/<value><\/value>/<value>Quickstart<\/value>/" "${ZEPPELIN_DIR}/conf/zeppelin-site.xml"
 
 # Set -Xmx for the server
 INST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
