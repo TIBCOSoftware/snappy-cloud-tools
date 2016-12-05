@@ -75,7 +75,7 @@ fi
 
 # Configure snappydata cluster
 printf "localhost -jmx-manager=true -jmx-manager-start=true\n"  > ${SNAPPYDATA_DIR}/conf/locators
-printf "localhost -client-bind-address=${PUBLIC_HOSTNAME} -locators=${PUBLIC_HOSTNAME}:10334 -client-port=1528 ${XMX_OPT}\n" > ${SNAPPYDATA_DIR}/conf/servers
+printf "localhost -locators=${PUBLIC_HOSTNAME}:10334 -client-port=1528 ${XMX_OPT}\n" > ${SNAPPYDATA_DIR}/conf/servers
 printf "localhost -locators=localhost:10334 -zeppelin.interpreter.enable=true \n" > ${SNAPPYDATA_DIR}/conf/leads
 printf "# `date` Configured SnappyData cluster $?\n" >> status.log
 
