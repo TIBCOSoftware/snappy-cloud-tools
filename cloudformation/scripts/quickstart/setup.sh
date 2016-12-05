@@ -98,6 +98,8 @@ if [[ ! -e ${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ]]; then
 fi
 
 
+rm -rf ${SNAPPYDATA_DIR}/work
+
 # Start the single node snappydata cluster
 bash ${SNAPPYDATA_DIR}/sbin/snappy-start-all.sh > cluster-status.log
 RUNNING=`grep -ic running cluster-status.log`
