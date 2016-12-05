@@ -98,6 +98,16 @@ if [[ ! -e ${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ]]; then
 fi
 
 
+# Start the single node snappydata cluster
+bash ${SNAPPYDATA_DIR}/sbin/snappy-start-all.sh > cluster-status.log
+RUNNING=`grep -ic running cluster-status.log`
+
+printf "# `date` Started SnappyData cluster, running ${RUNNING}\n" >> status.log
+
+if [[ ${RUNNING} -ne 3 ]]; then
+  exit 1
+fi
+
 # Skip interpreter.json, if it exists.
 if [[ -e ${ZEPPELIN_DIR}/conf/interpreter.json ]]; then
   mv ${ZEPPELIN_DIR}/conf/interpreter.json ${ZEPPELIN_DIR}/conf/interpreter.json.bak
@@ -123,6 +133,7 @@ if [[ $? -eq 0 ]]; then
     printf "# `date` Shutting down this instance in 120 minutes from now.\n" >> status.log
   fi
 fi
+rm document
 
 exit ${CLUSTER_STARTED}
 
