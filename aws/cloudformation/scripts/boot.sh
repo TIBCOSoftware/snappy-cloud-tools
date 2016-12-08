@@ -17,12 +17,10 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Update the urls for various artifacts and scripts.
-# Commit SHA eeaf8df94a4056a1037ba693e30d52ad997035e5
 printf "https://github.com/SnappyDataInc/snappy-poc/releases/download/0.6-cf/snappydata-0.6.1-SNAPSHOT-bin.tar.gz" > snappydata-url.txt
-# Commit SHA ab1d1365e7920267a4957e8c8b6f7084bee71b98
 printf "https://github.com/SnappyDataInc/snappy-poc/releases/download/0.6-cf/snappydata-zeppelin-0.6.1-SNAPSHOT.jar" > interpreter-url.txt
 printf "https://github.com/SnappyDataInc/zeppelin-interpreter/raw/notes/examples/notebook/notebook.tar.gz" > notebook-url.txt
-printf "https://github.com/SnappyDataInc/aws-cloud/raw/master/cloudformation/scripts/setup.sh" > cf-script-url.txt
+printf "https://github.com/SnappyDataInc/snappy-cloud-tools/raw/master/aws/cloudformation/scripts/setup.sh" > cf-script-url.txt
 printf "# `date` Updated urls $?\n" >> status.log
 
 rm setup.sh
