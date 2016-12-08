@@ -20,7 +20,7 @@ fi
 printf "https://github.com/SnappyDataInc/snappy-poc/releases/download/0.6-cf/snappydata-0.7-SNAPSHOT-bin.tar.gz" > snappydata-url.txt
 printf "https://github.com/SnappyDataInc/snappy-poc/releases/download/0.6-cf/snappydata-zeppelin-0.6.1-SNAPSHOT.jar" > interpreter-url.txt
 printf "https://s3-us-west-2.amazonaws.com/zeppelindemo/quickstart/notebook.tar.gz" > notebook-url.txt
-printf "https://github.com/SnappyDataInc/aws-cloud/raw/master/cloudformation/scripts/quickstart/setup.sh" > cf-script-url.txt
+printf "https://github.com/SnappyDataInc/snappy-cloud-tools/raw/master/aws/cloudformation/scripts/quickstart/setup.sh" > cf-script-url.txt
 printf "# `date` Updated urls $?\n" >> status.log
 
 rm setup.sh
