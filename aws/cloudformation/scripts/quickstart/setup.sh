@@ -60,8 +60,6 @@ printf "# `date` Extracted notebook $?\n" >> status.log
 rm -rf ${ZEPPELIN_DIR}/notebook/*
 cp -R notebook/* ${ZEPPELIN_DIR}/notebook/
 find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${PUBLIC_HOSTNAME}/g"
-sed -i "s/<value>snappydata<\/value>/<value>Quickstart<\/value>/" "${ZEPPELIN_DIR}/conf/zeppelin-site.xml"
-sed -i "s/<value><\/value>/<value>Quickstart<\/value>/" "${ZEPPELIN_DIR}/conf/zeppelin-site.xml"
 
 # Set -Xmx for the server
 INST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
@@ -97,9 +95,6 @@ if [[ ! -e ${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ]]; then
   printf "# `date` Moved interpreter jar to its dir $?\n" >> status.log
 fi
 
-
-rm -rf ${SNAPPYDATA_DIR}/work
-
 # Start the single node snappydata cluster
 bash ${SNAPPYDATA_DIR}/sbin/snappy-start-all.sh > cluster-status.log
 RUNNING=`grep -ic running cluster-status.log`
@@ -109,15 +104,6 @@ printf "# `date` Started SnappyData cluster, running ${RUNNING}\n" >> status.log
 if [[ ${RUNNING} -ne 3 ]]; then
   exit 1
 fi
-
-# Skip interpreter.json, if it exists.
-if [[ -e ${ZEPPELIN_DIR}/conf/interpreter.json ]]; then
-  mv ${ZEPPELIN_DIR}/conf/interpreter.json ${ZEPPELIN_DIR}/conf/interpreter.json.bak
-fi
-
-
-cp ${ZEPPELIN_DIR}/conf/zeppelin-env.sh.template ${ZEPPELIN_DIR}/conf/zeppelin-env.sh
-printf "\n export ZEPPELIN_INTP_MEM=\"-Xmx6g -XX:MaxPermSize=512m\"" >> ${ZEPPELIN_DIR}/conf/zeppelin-env.sh
 
 # Start Apache Zeppelin server
 bash ${ZEPPELIN_DIR}/bin/zeppelin-daemon.sh start
