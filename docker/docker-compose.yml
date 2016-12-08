@@ -1,0 +1,47 @@
+version: '2' 
+services: 
+ locator1:
+     image: snappydatainc/snappydata
+     hostname: snappy-locator1
+     working_dir: /opt/snappydata/
+     command: start locator
+     networks:
+       my-swarm-net:
+     ports:
+       - "7070:7070"
+       - "1527:1527"
+     expose:
+       - "10334"
+       - "1527"
+       - "7320"
+ server1:
+     image: snappydatainc/snappydata
+     hostname: snappy-server1
+     working_dir: /opt/snappydata/
+     command: bash -c "sleep 10 && start server -locators=locator1:10334"
+     networks:
+       my-swarm-net:
+     expose:
+       - "10334"
+       - "1527"
+       - "7320"
+     depends_on:
+       - "locator1"
+ zlead1:
+     image: snappydatainc/snappydata
+     hostname: snappy-lead1
+     working_dir: /opt/snappydata/
+     command: bash -c "sleep 15 && start lead -locators=locator1:10334"
+     ports:
+      - "4040:4040"
+     depends_on:
+      - "server1"
+     networks:
+       my-swarm-net:
+     expose:
+      - "10334"
+      - "1527"
+      - "4040"
+      - "8080" 
+networks:
+   my-swarm-net: 
