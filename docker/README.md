@@ -4,7 +4,7 @@
 * [Setting up Cluster with SnappyData Docker Image](#setting-up-cluster-with-snappydata-docker-image)
 * [Using docker-compose on Multiple Containers](#using-multiple-containers-with-docker-compose)
 * [Snappydata on Docker Cloud](#snappydata-on-docker-cloud)
-* [Link with SnappyData Distribution](#run-snappydata-cluster-on-kubernetes)
+* [Run SnappyData on Kubernetes](#run-snappydata-cluster-on-kubernetes)
 
 
 ## Setting up Cluster with SnappyData Docker Image
