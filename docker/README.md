@@ -227,12 +227,12 @@ Website: http://cloud.docker.com
 Got to *Nodes* tab and click on *Create.*Provide the information of Cloud
 providers.
 <br><br>
-<p style="text-align: center;"><img alt="Refresh" src="images\Page-1-Image-1.png"></p>
+<p style="text-align: center;"><img alt="Refresh" src="images/Page-1-Image-1.png"></p>
 <br><br>
 After Couple of minutes your node will be ready ( see below example with
 AWS in our case)
 <br><br>
-<p style="text-align: center;"><img alt="Refresh" src="images\Page-2-Image-2.png"></p>
+<p style="text-align: center;"><img alt="Refresh" src="images/Page-2-Image-2.png"></p>
 <br><br>
 1. Click on the Stacks tab, then the Create button. Give the Stack a name and add [this](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-cloud/stack.yml) code 
 <br><br>
@@ -240,23 +240,23 @@ Click the Create stack button and you will see a list of the resulting services 
 <br><br>
 Click the “start” button . After a few moments you will see our 3 node SnappyData cluster spread across containers and nodes. We have used Docker Cloud's default approach to load balancing (Emptiest Node) but there are many to choose from. As we are setting one set of ports manually, this will limit some of our potential deployment strategies. 
 <br><br>
-<p style="text-align: center;"><img alt="Refresh" src="images\Page-3-Image-3.png"></p>
+<p style="text-align: center;"><img alt="Refresh" src="images/Page-3-Image-3.png"></p>
 <br><br>
 To double check what is happening, click the *Nodes* tab, on *container*you should see the 1 VMs, with 3 containers running.
 <br><br>
-<p style="text-align: center;"><img alt="Refresh" src="images\Page-3-Image-4.png"></p>
+<p style="text-align: center;"><img alt="Refresh" src="images/Page-3-Image-4.png"></p>
 <br><br>
 Check public ip from “nodes” tab clicking on any nodes. 
 <br><br>
-<p style="text-align: center;"><img alt="Refresh" src="images\Page-4-Image-5.png"></p>
+<p style="text-align: center;"><img alt="Refresh" src="images/Page-4-Image-5.png"></p>
 <br><br>
 You can also check the snappy-shell on running containers
 <br><br>
-<p style="text-align: center;"><img alt="Refresh" src="images\Page-5-Image-7.png"></p>
+<p style="text-align: center;"><img alt="Refresh" src="images/Page-5-Image-7.png"></p>
 <br><br>
 Select the server container and go the *terminal*
 <br><br>
-<p style="text-align: center;"><img alt="Refresh" src="images\Page-5-Image-6.png"></p>
+<p style="text-align: center;"><img alt="Refresh" src="images/Page-5-Image-6.png"></p>
 <br><br>
 **Conclusion** 
 
