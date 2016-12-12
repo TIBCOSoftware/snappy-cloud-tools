@@ -2,20 +2,15 @@ locator1:
   command: start locator
   expose:
     - '1527'
-    - '4040'
-    - '8080'
     - '10334'
   image: 'snappydatainc/snappydata:latest'
   ports:
     - '1527:1527'
-    - '7070:7070'
   working_dir: /opt/snappydata/
 server1:
   command: 'start server -locators=locator1:10334'
   expose:
     - '1527'
-    - '7320'
-    - '10334'
   image: 'snappydatainc/snappydata:latest'
   links:
     - locator1
@@ -23,10 +18,6 @@ server1:
   working_dir: /opt/snappydata/
 snappy-lead1:
   command: 'start lead -locators=locator1:10334'
-  expose:
-    - '1527'
-    - '7320'
-    - '10334'
   image: 'snappydatainc/snappydata:latest'
   links:
     - server1
