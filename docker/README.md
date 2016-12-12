@@ -108,7 +108,7 @@ Starting sshd:
 
 
   ```
-  $ docker-compose up -d
+  $ docker-compose -f docker-compose.yml up -d
   Creating network "docker_default" with the default driver
   Creating locator1_1
   Creating server1_1
