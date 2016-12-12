@@ -58,7 +58,7 @@ Starting sshd:
  **Connect Client on port “1527”**
 
  ```
- $ snappy> connect client 'localhost:1527';
+ $ snappy> connect client 'localhost:1527;load-balance=false';
  ```
 
  **View Connections**
@@ -104,6 +104,9 @@ Starting sshd:
   docker-compose version 1.8.1, build 878cff1
   ```
 
+  Use [docker-compose.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-compose.yml) file to run docker-compose.
+
+
   ```
   $ docker-compose up -d
   Creating network "docker_default" with the default driver
@@ -111,6 +114,19 @@ Starting sshd:
   Creating server1_1
   Creating snappy-lead1_1
   ```
+
+  It will create three containers, 
+
+  ```
+  $ docker-compose ps
+  Name                       Command               State                                          Ports
+  ----------------------------------------------------------------------------------------------------------------------------------------------------
+  locator1_1       bash -c /opt/snappydata/sb ...   Up      10334/tcp, 0.0.0.0:1527->1527/tcp, 1528/tcp, 4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
+  server1_1        bash -c sleep 10 && /opt/s ...   Up      10334/tcp, 1527/tcp, 0.0.0.0:1528->1528/tcp, 4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
+  snappy-lead1_1   bash -c sleep 20 && /opt/s ...   Up      10334/tcp, 1527/tcp, 1528/tcp, 0.0.0.0:4040->4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
+  ```
+
+  Check the logs and see what is running inside docker-compose
 
   ```
   $ docker-compose logs
@@ -132,27 +148,28 @@ Starting sshd:
   locator1_1      | SnappyData Locator pid: 87 status: running
   ```
 
+  Above logs shows your cluster has been started successfully on three containers.
+
   **Connect SnappyData with the Command Line Client on server1_1**
 
   ```
   $ docker exec -it server1_1 ./bin/snappy-shell
   ```
 
-  ```
-  $ snappy> connect client 'localhost:1527';
-  ```
+   ```
+   $ snappy> connect client 'localhost:1528;load-balance=false';
+   ```
 
-  **View Connections**
+   **View Connections**
 
-  ```
-  snappy> show connections;
-  CONNECTION0* -
-   jdbc:gemfirexd://localhost[1527]/
+   ```
+   snappy> show connections;
+   CONNECTION0* -
+   jdbc:gemfirexd://localhost[1528]/
    * = current connection
    ```
 
    **Stopping docker-compose**
-
    To stop and remove containers from docker-enginet
 
    ```
@@ -166,3 +183,4 @@ Starting sshd:
    Removing network docker_default
    ```
 
+   Note : After removing containers from docker engine will destroy saved data in to the containers. 
