@@ -3,7 +3,7 @@
 
 * [Setting up Cluster with SnappyData Docker Image](#setting-up-cluster-with-snappydata-docker-image)
 * [Using docker-compose on Multiple Containers](#using-multiple-containers-with-docker-compose)
-* [Snappydata on Docker Cloud](#snappydata-on-docker-cloud)
+* [SnappyData on Docker Cloud](#run-snappydata-on-docker-cloud)
 * [Run SnappyData on Kubernetes](#run-snappydata-cluster-on-kubernetes)
 
 
@@ -197,11 +197,8 @@ Note : After removing containers from docker engine will destroy saved data in t
 
 
 
-##Docker Guidelines for SnappyData
+##Run SnappyData on Docker Cloud
 Image : snappydatainc/snappydata Tag : latest
-
-
-**Snappydata on Docker Cloud** 
 
 
 Docker Cloud is Docker's official platform for building, managing and deploying Docker containers across a variety of cloud providers and a provides features ideal for Development workflows. 
