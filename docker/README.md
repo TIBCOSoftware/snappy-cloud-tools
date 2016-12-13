@@ -180,7 +180,7 @@ CONNECTION0* -
 
 **Stopping docker-compose**
 
-To stop and remove containers from docker-enginet
+To stop and remove containers from docker-engine
 
 ```
 $ docker-compose down
