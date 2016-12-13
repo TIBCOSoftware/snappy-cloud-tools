@@ -4,6 +4,7 @@
 * [Setting up Cluster with SnappyData Docker Image](#setting-up-cluster-with-snappydata-docker-image)
 * [Using docker-compose on Multiple Containers](#using-multiple-containers-with-docker-compose)
 * [SnappyData on Docker Cloud](#run-snappydata-on-docker-cloud)
+* [SnappyData with Docker Swarm](#snappydata-with-docker-swarm)
 * [Run SnappyData on Kubernetes](#run-snappydata-cluster-on-kubernetes)
 
 
@@ -259,6 +260,228 @@ Select the server container and go the *terminal*
 
 The real potential in the Docker Cloud lies in its simple scalability through a user-friendly UI (and CLI) which pairs well with SnappyData, this has been a simple, 'getting started' example and we recommend you look further at [Docker Cloud's documentation](https://docs.docker.com/docker-cloud/) to explore its full potential.
 
+##SnappyData With Docker Swarm
+
+This article explains how to setup multi-host snappydata cluster using docker swarm , docker-machine and docker-compose
+
+###Prerequisites
+Before you begin, make sure you have a system on your network with the latest version of Docker Engine , Docker Machine and docker-compose installed. The example also relies on VirtualBox. If you installed on a Mac or Windows with Docker Toolbox, you have all of these installed already.
+
+**Step 1: Set up a key-value store**
+
+An overlay network requires a key-value store. The key-value store holds information about the network state which includes discovery, networks, endpoints, IP addresses, and more. Docker supports Consul, Etcd, and ZooKeeper key-value stores. We will use consul.
+
+Log into a system prepared with the prerequisite Docker Engine, Docker Machine, and VirtualBox software.
+
+1. Create virtual machine called mh-keystore
+
+```
+$ docker-machine create -d virtualbox mh-keystore
+```
+2. Set your local environment to the mh-keystore machine.
+``
+$  eval "$(docker-machine env mh-keystore)"
+```
+3.  Start a  progrium/consul  container running  on the  mh-keystore  machine
+
+```
+$  docker run -d -p "8500:8500" -h "consul" progrium/consul -server -bootstrap
+```
+
+**Step 2: Create a Swarm cluster**
+
+1. Create a Swarm master.
+
+```
+ $ docker-machine create \
+   -d virtualbox \
+   --virtualbox-memory 4096
+   --swarm --swarm-master \
+   --swarm-discovery="consul://$(docker-machine ip mh-keystore):8500" \
+   --engine-opt="cluster-store=consul://$(docker-machine ip mh-keystore):8500" \
+   --engine-opt="cluster-advertise=eth1:2376" \
+   snappy-swarm0
+```
+
+2. Create another two host and add it to the Swarm cluster.
+
+```
+ $ docker-machine create \
+   -d virtualbox \
+   --virtualbox-memory 4096
+   --swarm \
+   --swarm-discovery="consul://$(docker-machine ip mh-keystore):8500" \
+   --engine-opt="cluster-store=consul://$(docker-machine ip mh-keystore):8500" \
+   --engine-opt="cluster-advertise=eth1:2376" \
+   snappy-swarm1
+```
+```
+$ docker-machine create \
+  -d virtualbox \
+  --virtualbox-memory 4096
+  --swarm \
+  --swarm-discovery="consul://$(docker-machine ip mh-keystore):8500" \
+  --engine-opt="cluster-store=consul://$(docker-machine ip mh-keystore):8500" \
+  --engine-opt="cluster-advertise=eth1:2376" \
+  snappy-swarm2
+```
+
+3. List your machines to confirm they are all up and running.
+
+```
+$ docker-machine ls
+NAME            ACTIVE   DRIVER       STATE     URL                         SWARM                    DOCKER    ERRORS
+mh-keystore     *        virtualbox   Running   tcp://192.168.99.100:2376                            v1.12.3
+snappy-swarm0   -        virtualbox   Running   tcp://192.168.99.104:2376   snappy-swarm0 (master)   v1.12.3
+snappy-swarm1   -        virtualbox   Running   tcp://192.168.99.105:2376   snappy-swarm0            v1.12.3
+snappy-swarm2   -        virtualbox   Running   tcp://192.168.99.106:2376   snappy-swarm0            v1.12.3
+```
+
+At this point you have a set of hosts running on your network. You are ready to create a multi-host network for containers using these hosts.
+Leave your terminal open and go onto the next step.
+
+4. Copy SnappyData image in three machines
+
+
+Pull latest image of snappydata and save it in temp directory
+```
+docker-machine ssh snappy-swarm0 'docker pull snappydatainc/snappydata;docker save -o /tmp/snappydata.tar snappydatainc/snappydata:latest'
+```
+
+Copy image to other virtual machines 
+
+```
+docker-machine scp snappy-swarm0:/tmp/snappydata.tar snappy-swarm1:/tmp/snappydata.tar
+docker-machine scp snappy-swarm0:/tmp/snappydata.tar snappy-swarm2:/tmp/snappydata.tar
+```
+Load the image on virtual machines
+
+```
+docker-machine ssh snappy-swarm1 "docker load -i /tmp/snappydata.tar"
+docker-machine ssh snappy-swarm2 "docker load -i /tmp/snappydata.tar"
+```
+
+
+**Step 4: Run SnappyData on Network**
+
+1. Point your environment to the Swarm master.
+
+```
+$ eval $(docker-machine env --swarm snappy-swarm0)
+```
+
+2. use docker info to view swarm
+
+```
+$docker info
+Containers: 4
+ Running: 4
+ Paused: 0
+ Stopped: 0
+Images: 6
+Server Version: swarm/1.2.5
+Role: primary
+Strategy: spread
+Filters: health, port, containerslots, dependency, affinity, constraint
+Nodes: 3
+ snappy-swarm0: 192.168.99.104:2376
+  └ ID: THKK:ZYSX:BSRW:XVT5:DWR7:JUVU:JW4M:TIWJ:OBYE:SD3O:SKVH:EXBG
+  └ Status: Healthy
+  └ Containers: 2 (2 Running, 0 Paused, 0 Stopped)
+  └ Reserved CPUs: 0 / 1
+  └ Reserved Memory: 0 B / 1.021 GiB
+  └ Labels: kernelversion=4.4.27-boot2docker, operatingsystem=Boot2Docker 1.12.3 (TCL 7.2); HEAD : 7fc7575 - Thu Oct 27 17:23:17 UTC 2016, provider=virtualbox, storagedriver=aufs
+  └ UpdatedAt: 2016-12-13T09:15:04Z
+  └ ServerVersion: 1.12.3
+ snappy-swarm1: 192.168.99.105:2376
+  └ ID: CAXT:FMFA:42DW:U66A:YUO4:QHQF:PXQE:BNVE:CHLX:EVIT:LB32:RAHX
+  └ Status: Healthy
+  └ Containers: 1 (1 Running, 0 Paused, 0 Stopped)
+  └ Reserved CPUs: 0 / 1
+  └ Reserved Memory: 0 B / 1.021 GiB
+  └ Labels: kernelversion=4.4.27-boot2docker, operatingsystem=Boot2Docker 1.12.3 (TCL 7.2); HEAD : 7fc7575 - Thu Oct 27 17:23:17 UTC 2016, provider=virtualbox, storagedriver=aufs
+  └ UpdatedAt: 2016-12-13T09:15:21Z
+  └ ServerVersion: 1.12.3
+ snappy-swarm2: 192.168.99.106:2376
+  └ ID: 73AX:EVEW:AW7X:3UYW:X6UE:DRVU:LQMC:R5AR:VMHV:GHP6:BZ6D:T5LH
+  └ Status: Healthy
+  └ Containers: 1 (1 Running, 0 Paused, 0 Stopped)
+  └ Reserved CPUs: 0 / 1
+  └ Reserved Memory: 0 B / 1.021 GiB
+  └ Labels: kernelversion=4.4.27-boot2docker, operatingsystem=Boot2Docker 1.12.3 (TCL 7.2); HEAD : 7fc7575 - Thu Oct 27 17:23:17 UTC 2016, provider=virtualbox, storagedriver=aufs
+  └ UpdatedAt: 2016-12-13T09:15:16Z
+  └ ServerVersion: 1.12.3
+```
+
+
+From this information, you can see that you are running 3 nodes running on swarm master
+
+
+**Step 4: Run SnappyData on Swarm**
+
+1. Use below [docker-compose.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-compose.yml)  file 
+
+
+```
+version: '2'
+services:
+ locator1:
+     image: snappydatainc/snappydata
+     working_dir: /opt/snappydata/
+     command: bash -c "/opt/snappydata/sbin/snappy-locators.sh start -peer-discovery-address=locator1 -client-bind-address=0.0.0.0 && tail -f /dev/null"  
+     ports:
+       - "1527:1527"
+     expose:
+       - "10334"
+       - "1527"
+ server1:
+     image: snappydatainc/snappydata
+     working_dir: /opt/snappydata/
+     command: bash -c "sleep 10 && /opt/snappydata/sbin/snappy-servers.sh start -locators=locator1:10334 -client-bind-address=0.0.0.0 -client-port=1528 && tail -f /dev/null"
+     expose:
+       - "10334"
+       - "1528"
+     ports:
+       - "1528:1528"
+     depends_on:
+       - "locator1"
+ snappy-lead1:
+     image: snappydatainc/snappydata
+     working_dir: /opt/snappydata/
+     command: bash -c "sleep 20 && /opt/snappydata/sbin/snappy-leads.sh start -locators=locator1:10334 && tail -f /dev/null"
+     depends_on:
+      - "server1"
+     ports:
+      - "4040:4040"
+```
+
+2. Run the yml file
+
+```
+$ docker-compose -f docker-compose.yml up -d
+Creating network "default" with the default driver
+Creating locator1_1
+Creating server1_1
+Creating snappy-lead1_1
+```
+
+3. Verify the compose process
+
+```
+$ docker-compose ps
+Name                       Command               State                                             Ports
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+locator1_1       bash -c /opt/snappydata/sb ...   Up      10334/tcp, 192.168.99.105:1527->1527/tcp, 1528/tcp, 4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
+server1_1        bash -c sleep 10 && /opt/s ...   Up      10334/tcp, 192.168.99.106:1527->1527/tcp, 1528/tcp, 4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
+snappy-lead1_1   bash -c sleep 20 && /opt/s ...   Up      10334/tcp, 1527/tcp, 1528/tcp, 192.168.99.104:4040->4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
+```
+Within few seconds cluster will be up and you will be able to make jdbc connections
+
+
+
 ##Run SnappyData Cluster on Kubernetes 
+
+
+
 
 (Coming soon)
