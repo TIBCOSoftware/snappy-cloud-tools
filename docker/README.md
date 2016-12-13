@@ -273,17 +273,17 @@ An overlay network requires a key-value store. The key-value store holds informa
 
 Log into a system prepared with the prerequisite Docker Engine, Docker Machine, and VirtualBox software.
 
-1. Create virtual machine called mh-keystore
+Create virtual machine called mh-keystore
 
 ```
 $ docker-machine create -d virtualbox mh-keystore
 ```
-2. Set your local environment to the mh-keystore machine.
+Set your local environment to the mh-keystore machine.
 
 ```
 $  eval "$(docker-machine env mh-keystore)"
 ```
-3.  Start a  progrium/consul  container running  on the  mh-keystore  machine
+Start a  progrium/consul  container running  on the  mh-keystore  machine
 
 ```
 $  docker run -d -p "8500:8500" -h "consul" progrium/consul -server -bootstrap
@@ -291,7 +291,7 @@ $  docker run -d -p "8500:8500" -h "consul" progrium/consul -server -bootstrap
 
 **Step 2: Create a Swarm cluster**
 
-1. Create a Swarm master.
+Create a Swarm master.
 
 ```
  $ docker-machine create \
@@ -304,7 +304,7 @@ $  docker run -d -p "8500:8500" -h "consul" progrium/consul -server -bootstrap
    snappy-swarm0
 ```
 
-2. Create another two host and add it to the Swarm cluster.
+Create another two host and add it to the Swarm cluster.
 
 ```
  $ docker-machine create \
@@ -328,7 +328,7 @@ $ docker-machine create \
   snappy-swarm2
 ```
 
-3. List your machines to confirm they are all up and running.
+List your machines to confirm they are all up and running.
 
 ```
 $ docker-machine ls
@@ -342,7 +342,7 @@ snappy-swarm2   -        virtualbox   Running   tcp://192.168.99.106:2376   snap
 At this point you have a set of hosts running on your network. You are ready to create a multi-host network for containers using these hosts.
 Leave your terminal open and go onto the next step.
 
-4. Copy SnappyData image in three machines
+Copy SnappyData image in three machines
 
 
 Pull latest image of snappydata and save it in temp directory
@@ -366,13 +366,13 @@ docker-machine ssh snappy-swarm2 "docker load -i /tmp/snappydata.tar"
 
 **Step 4: Run SnappyData on Network**
 
-1. Point your environment to the Swarm master.
+Point your environment to the Swarm master.
 
 ```
 $ eval $(docker-machine env --swarm snappy-swarm0)
 ```
 
-2. use docker info to view swarm
+Use docker info to view swarm
 
 ```
 $docker info
@@ -421,7 +421,7 @@ From this information, you can see that you are running 3 nodes running on swarm
 
 **Step 4: Run SnappyData on Swarm**
 
-1. Use below [docker-compose.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-compose.yml)  file 
+Use below [docker-compose.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-compose.yml)  file 
 
 
 ```
@@ -457,7 +457,7 @@ services:
       - "4040:4040"
 ```
 
-2. Run the yml file
+Run the yml file
 
 ```
 $ docker-compose -f docker-compose.yml up -d
@@ -467,7 +467,7 @@ Creating server1_1
 Creating snappy-lead1_1
 ```
 
-3. Verify the compose process
+Verify the compose process
 
 ```
 $ docker-compose ps
