@@ -67,7 +67,7 @@ $ docker exec -it snappydata ./bin/snappy-shell
 **Connect Client on port “1527”**
 
 ```
-$ snappy> connect client 'localhost:1527;load-balance=false';
+$ snappy> connect client 'localhost:1527';
 ```
 
 **View Connections**
