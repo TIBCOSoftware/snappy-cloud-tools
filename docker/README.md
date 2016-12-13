@@ -5,7 +5,6 @@
 * [Using docker-compose on Multiple Containers](#using-multiple-containers-with-docker-compose)
 * [SnappyData on Docker Cloud](#run-snappydata-on-docker-cloud)
 * [SnappyData with Docker Swarm](#snappydata-with-docker-swarm)
-* [Run SnappyData on Kubernetes](#run-snappydata-cluster-on-kubernetes)
 
 
 ## Setting up Cluster with SnappyData Docker Image
@@ -481,9 +480,3 @@ Within few seconds cluster will be up and you will be able to make jdbc connecti
 
 
 
-##Run SnappyData Cluster on Kubernetes 
-
-
-
-
-(Coming soon)
