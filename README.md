@@ -11,4 +11,4 @@ Disclaimer: This repo is still work-in-progress.
 
 ## SnappyData with Docker
 
-(Coming soon)
+Read about running SnappyData cluster on docker [here](https://github.com/SnappyDataInc/snappy-cloud-tools/tree/master/docker) 
