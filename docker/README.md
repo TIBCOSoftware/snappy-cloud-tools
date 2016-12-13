@@ -279,7 +279,8 @@ Log into a system prepared with the prerequisite Docker Engine, Docker Machine, 
 $ docker-machine create -d virtualbox mh-keystore
 ```
 2. Set your local environment to the mh-keystore machine.
-``
+
+```
 $  eval "$(docker-machine env mh-keystore)"
 ```
 3.  Start a  progrium/consul  container running  on the  mh-keystore  machine
@@ -315,6 +316,7 @@ $  docker run -d -p "8500:8500" -h "consul" progrium/consul -server -bootstrap
    --engine-opt="cluster-advertise=eth1:2376" \
    snappy-swarm1
 ```
+<br><br>
 ```
 $ docker-machine create \
   -d virtualbox \
