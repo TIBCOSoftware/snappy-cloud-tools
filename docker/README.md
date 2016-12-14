@@ -166,7 +166,7 @@ $ docker exec -it server1_1 ./bin/snappy-shell
 ```
 
 ```
-$ snappy> connect client 'localhost:1528;load-balance=false';
+$ snappy> connect client 'localhost:1528';
 ```
 
 **View Connections**
@@ -232,10 +232,41 @@ AWS in our case)
 <p style="text-align: center;"><img alt="Refresh" src="images/Page-2-Image-2.png"></p>
 <br><br>
 1. Click on the Stacks tab, then the Create button. Give the Stack a name and add [this](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-cloud/stack.yml) code 
+
+```
+locator1:
+  command: start locator
+  expose:
+    - '1527'
+    - '10334'
+  image: 'snappydatainc/snappydata:latest'
+  ports:
+    - '1527:1527'
+  working_dir: /opt/snappydata/
+server1:
+  command: 'start server -locators=locator1:10334'
+  expose:
+    - '1527'
+  image: 'snappydatainc/snappydata:latest'
+  links:
+    - locator1
+  sequential_deployment: true
+  working_dir: /opt/snappydata/
+snappy-lead1:
+  command: 'start lead -locators=locator1:10334'
+  image: 'snappydatainc/snappydata:latest'
+  links:
+    - server1
+  ports:
+    - '4040:4040'
+  sequential_deployment: true
+  working_dir: /opt/snappydata/
+```  
+
 <br><br>
 Click the Create stack button and you will see a list of the resulting services not yet running. 
 <br><br>
-Click the “start” button . After a few moments you will see our 3 node SnappyData cluster spread across containers and nodes. We have used Docker Cloud's default approach to load balancing (Emptiest Node) but there are many to choose from. As we are setting one set of ports manually, this will limit some of our potential deployment strategies. 
+Click the “start” button . After a few moments you will see our three node SnappyData cluster spread across containers and nodes. We have used Docker Cloud's default approach to load balancing (Emptiest Node) but there are many to choose from. As we are setting one set of ports manually, this will limit some of our potential deployment strategies. 
 <br><br>
 <p style="text-align: center;"><img alt="Refresh" src="images/Page-3-Image-3.png"></p>
 <br><br>
