@@ -481,24 +481,37 @@ Within few seconds cluster will be up and you will be able to make jdbc connecti
 ##Using Kubernetes
 
 Kubernetes is a container orchestration platform that you can use to manage and scale your running containers across multiple instances or within a hybrid-cloud environment
-If you want to use it locally you will need [minikube](http://kubernetes.io/docs/getting-started-guides/minikube/) with virtualbox. 
-Google cloud provides container engine that can create cluster with multiple VM instances. Follow [this](https://cloud.google.com/container-engine/docs/quickstart) guide on how to configure container engine with kubernetes.
-
-
 This guide will assume that you already have kubectl and a Kubernetes cluster ready to go. All of the commands/templates/etc. provided should be customized to meet your personal requirements!
-SnappyData is a perfect candidate to deploy via Pet Set. A Pet Set is much like a Replication Controller. Get more details about petset [here](http://kubernetes.io/docs/user-guide/petset/#what-is-a-petset)  
 
-[Here](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/kubernetes/snappydata.yml)'s an example YAML manifest :
 
-**Quickstart**
+**Prerequisites**
 
-If you want to jump straight to the commands we will run, here are the steps:
+This example requires a running Kubernetes cluster. First, check that kubectl is properly configured by getting the cluster state:
 
 ```
-kubectl create -f snappydata.yml
+$ kubectl cluster-info
+```
+If you see a url response, you are ready to go. If not, read the [Getting Started guides](http://kubernetes.io/docs/getting-started-guides/) for how to get started, and follow the [prerequisites](http://kubernetes.io/docs/user-guide/prereqs/) to install and configure kubectl. As noted above, if you have a Google Container Engine cluster set up, read [this example](https://cloud.google.com/container-engine/docs/tutorials/guestbook) instead.
+
+
+
+Start the guestbook with one command:
+
+
+```
+$ kubectl create -f snappydata.yml
+service "snappydata-locator-public" created
+service "snappydata-server-public" created
+service "snappydata-leader-public" created
+service "snappydata-locator" created
+service "snappydata-server" created
+service "snappydata-leader" created
+petset "snappydata-locator" created
+petset "snappydata-server" created
+petset "snappydata-leader" created
 ```
 
-Find out the public IP and the services that have been created with
+Then, list all your Services:
 
 ```
 kubectl get services
@@ -511,12 +524,111 @@ $ kubectl proxy
 ```
 
 When you access dashboard , You'll see workloads 
-
+<br><br>
 <p style="text-align: center;"><img alt="Refresh" src="images/kube1-image.png"></p>
+<br><br>
 
-Click on the "Services" and you will see pods and services are running.
+List created pods by kubectl
 
+```
+$ kubectl get pods
+NAME                   READY     STATUS    RESTARTS   AGE
+snappydata-leader-0    1/1       Running   0          2h
+snappydata-locator-0   1/1       Running   0          2h
+snappydata-server-0    1/1       Running   0          2h
+```
+
+Check logs of locator
+
+```
+$ kubectl logs snappydata-locator-0
+Starting sshd: [  OK  ]
+172.17.0.4: Warning: Permanently added '172.17.0.4' (RSA) to the list of known hosts.
+172.17.0.4: Starting SnappyData Locator using peer discovery on: 172.17.0.4[10334]
+172.17.0.4: Starting DRDA server for SnappyData at address /172.17.0.4[1527]
+172.17.0.4: Logs generated in /opt/snappydata/work/172.17.0.4-locator-1/snappylocator.log
+172.17.0.4: SnappyData Locator pid: 129 status: running
+```
+
+**Using 'type: LoadBalancer' for the frontend service (cloud-provider-specific)**
+
+For supported cloud providers, such as Google Compute Engine or Google Container Engine, you can specify to use an external load balancer in the service spec, to expose the service onto an external load balancer IP. To do this, uncomment the type: LoadBalancer line in the frontend.yaml file before you start the service.
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: snappydata-locator-public
+  labels:
+    app: snappydata
+spec:
+  ports:
+  - port: 1527
+    targetPort: 1527
+    name: jdbc
+  - port: 10334
+    targetPort: 10334
+    name: locator
+  - port: 7070
+    targetPort: 7070
+    name: pulse
+  type: LoadBalancer
+  selector:
+    app: snappydata-locator
+---
+```
+
+**Troubleshooting**
+
+If you are having trouble bringing up SnappyData Services, double check that your external IP is properly defined for your frontend Service, and that the firewall for your cluster nodes is open to port `1527, 10334, 8080, 4040` .
+
+**Accessing the guestbook site externally**
+
+You'll want to set up your SnappyData so that it can be accessed from outside of the internal Kubernetes network. Above, we introduced one way to do that, by setting `type: LoadBalancer` to Service `spec`.
+More generally, Kubernetes supports two ways of exposing a Service onto an external IP address: `NodePort`s and `LoadBalancer`s
+
+If the `LoadBalancer` specification is used, it can take a short period for an external IP to show up in `kubectl get services` output, but you should then see it listed as well, e.g. like this:
+<br><br>
 <p style="text-align: center;"><img alt="Refresh" src="images/kube-Image-4.png"></p>
+<br><br>
+
+Once you've exposed the service to an external IP, visit the IP to see SnappyData Service in action, i.e. `http://<EXTERNAL-IP>:<PORT>`.
+You should see a web page of Spark Ui 
+<br><br>
+<p style="text-align: center;"><img alt="Refresh" src="images/kube-Image-6.png"></p>
+<br><br>
+
+#### Google Compute Engine External Load Balancer Specifics
+
+In Google Compute Engine, Kubernetes automatically creates forwarding rules for services with `LoadBalancer`.
+
+You can list the forwarding rules like this (the forwarding rule also indicates the external IP):
+
+```console
+$ gcloud compute forwarding-rules list
+NAME                  REGION      IP_ADDRESS     IP_PROTOCOL TARGET
+frontend              us-central1 130.211.188.51 TCP         us-central1/targetPools/frontend
+```
+
+In Google Compute Engine, you also may need to open the firewall for port 80 using the [console][cloud-console] or the `gcloud` tool. The following command will allow traffic from any source to instances tagged `kubernetes-node` (replace with your tags as appropriate):
+
+```console
+$ gcloud compute firewall-rules create --allow=tcp:80 --target-tags=kubernetes-node kubernetes-node-80
+```
+
+For GCE Kubernetes startup details, see the [Getting started on Google Compute Engine](../../docs/getting-started-guides/gce.md)
+
+For Google Compute Engine details about limiting traffic to specific sources, see the [Google Compute Engine firewall documentation][gce-firewall-docs].
+
+[cloud-console]: https://console.developer.google.com
+[gce-firewall-docs]: https://cloud.google.com/compute/docs/networking#firewalls
+
+<!-- BEGIN MUNGE: GENERATED_ANALYTICS -->
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/examples/guestbook/README.md?pixel)]()
+<!-- END MUNGE: GENERATED_ANALYTICS -->
+
+
+
 
 
 
