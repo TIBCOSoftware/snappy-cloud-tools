@@ -5,7 +5,7 @@
 * [Using docker-compose on Multiple Containers](#using-multiple-containers-with-docker-compose)
 * [SnappyData on Docker Cloud](#run-snappydata-on-docker-cloud)
 * [SnappyData with Docker Swarm](#snappydata-with-docker-swarm)
-
+* [Using Kubernetes](#using-kubernetes)
 
 ## Setting up Cluster with SnappyData Docker Image
 ###Prerequisites
@@ -477,6 +477,54 @@ server1_1        bash -c sleep 10 && /opt/s ...   Up      10334/tcp, 192.168.99.
 snappy-lead1_1   bash -c sleep 20 && /opt/s ...   Up      10334/tcp, 1527/tcp, 1528/tcp, 192.168.99.104:4040->4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
 ```
 Within few seconds cluster will be up and you will be able to make jdbc connections
+
+##Using Kubernetes
+
+Kubernetes is a container orchestration platform that you can use to manage and scale your running containers across multiple instances or within a hybrid-cloud environment
+If you want to use it locally you will need [minikube](http://kubernetes.io/docs/getting-started-guides/minikube/) with virtualbox. 
+Google cloud provides container engine that can create cluster with multiple VM instances. Follow [this](https://cloud.google.com/container-engine/docs/quickstart) guide on how to configure container engine with kubernetes.
+
+
+This guide will assume that you already have kubectl and a Kubernetes cluster ready to go. All of the commands/templates/etc. provided should be customized to meet your personal requirements!
+SnappyData is a perfect candidate to deploy via Pet Set. A Pet Set is much like a Replication Controller. Get more details about petset [here](http://kubernetes.io/docs/user-guide/petset/#what-is-a-petset)  
+
+[Here](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/kubernetes/snappydata.yml)'s an example YAML manifest :
+
+**Quickstart**
+
+If you want to jump straight to the commands we will run, here are the steps:
+
+```
+kubectl create -f snappydata.yml
+```
+
+Find out the public IP and the services that have been created with
+
+```
+kubectl get services
+```
+
+You can access Dashboard using the kubectl command-line tool by running the following command:
+
+```
+$ kubectl proxy
+```
+
+When you access dashboard , You'll see workloads 
+
+<p style="text-align: center;"><img alt="Refresh" src="images/kube1-image.png"></p>
+
+Click on the "Services" and you will see pods and services are running.
+
+<p style="text-align: center;"><img alt="Refresh" src="images/kube-Image-4.png"></p>
+
+
+
+
+
+
+
+
 
 
 
