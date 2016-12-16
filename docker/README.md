@@ -227,7 +227,7 @@ providers.
 <p style="text-align: center;"><img alt="Refresh" src="images/Page-1-Image-1.png"></p>
 <br><br>
 After Couple of minutes your node will be ready ( see below example with
-AWS in our case)
+Azure in our case)
 <br><br>
 <p style="text-align: center;"><img alt="Refresh" src="images/Page-2-Image-2.png"></p>
 <br><br>
@@ -372,7 +372,7 @@ snappy-swarm2   -        virtualbox   Running   tcp://192.168.99.106:2376   snap
 At this point you have a set of hosts running on your network. You are ready to create a multi-host network for containers using these hosts.
 Leave your terminal open and go onto the next step.
 
-Copy SnappyData image in three machines
+**Step3: Copy SnappyData image in three machines**
 
 
 Pull latest image of snappydata and save it in temp directory
@@ -449,7 +449,7 @@ Nodes: 3
 From this information, you can see that you are running 3 nodes running on swarm master
 
 
-**Step 4: Run SnappyData on Swarm**
+**Step 5: Run SnappyData on Swarm**
 
 Use below [docker-compose.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-compose.yml)  file 
 
