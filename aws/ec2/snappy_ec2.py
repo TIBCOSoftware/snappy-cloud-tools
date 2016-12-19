@@ -65,19 +65,20 @@ LOCATOR_CLIENT_PORT = "1527"
 
 DEFAULT_SNAPPY_VERSION = "LATEST"
 
-# Amazon Linux AMIs 2016.03 for EBS-backed HVM
+# Amazon Linux AMIs 2016.09 for EBS-backed HVM
 HVM_AMI_MAP = {
-    "ap-northeast-1": "ami-374db956",
-    "ap-northeast-2": "ami-2b408b45",
-    "ap-south-1": "ami-ffbdd790",
-    "ap-southeast-1": "ami-a59b49c6",
-    "ap-southeast-2": "ami-dc361ebf",
-    "eu-central-1": "ami-ea26ce85",
-    "eu-west-1": "ami-f9dd458a",
-    "sa-east-1": "ami-6dd04501",
-    "us-east-1": "ami-6869aa05",
-    "us-west-1": "ami-31490d51",
-    "us-west-2": "ami-7172b611"
+    "ap-northeast-1": "ami-0c11b26d",
+    "ap-northeast-2": "ami-983ce8f6",
+    "ap-south-1": "ami-34b4c05b",
+    "ap-southeast-1": "ami-b953f2da",
+    "ap-southeast-2": "ami-db704cb8",
+    "eu-central-1": "ami-f9619996",
+    "eu-west-1": "ami-9398d3e0",
+    "sa-east-1": "ami-97831ffb",
+    "us-east-1": "ami-b73b63a0",
+    "us-east-2": "ami-58277d3d",
+    "us-west-1": "ami-23e8a343",
+    "us-west-2": "ami-5ec1673e"
 }
 
 
@@ -197,7 +198,7 @@ def parse_args():
         "-v", "--snappydata-version", default=DEFAULT_SNAPPY_VERSION,
         help="Version of SnappyData to use: 'X.Y.Z' (default: %default)")
     parser.add_option(
-        "--with-zeppelin", default="embedded",
+        "--with-zeppelin", default=None,
         help="Launch Apache Zeppelin server with the cluster." + 
              " Use 'embedded' to launch it on lead node and 'non-embedded' to launch it on a separate instance.")
     parser.add_option(
@@ -1490,6 +1491,10 @@ def real_main():
         print((e), file=stderr)
         sys.exit(1)
 
+    if conn is None:
+        print("Could not get a connection to region %s. Please check the region name or try with another region." % opts.region)
+        sys.exit(1)
+
     # Select an AZ at random if it was not specified.
     if opts.zone == "":
         opts.zone = random.choice(conn.get_all_zones()).name
@@ -1514,7 +1519,8 @@ def real_main():
         if SNAPPYDATA_UI_PORT == "":
             SNAPPYDATA_UI_PORT = '4040'
         url = "http://%s:%s" % (lead, SNAPPYDATA_UI_PORT)
-        print("SnappyData Unified cluster started at %s" % url)
+        print("SnappyData Unified cluster started.")
+        print("  Access Apache Spark UI and SnappyData Dashboard at %s" % url)
         if opts.with_zeppelin is not None:
             if len(zeppelin_nodes) == 1:
                 zp = get_dns_name(zeppelin_nodes[0], opts.private_ips)
@@ -1522,6 +1528,7 @@ def real_main():
                 zp = lead
             url = "http://%s:8080" % zp
             print("Apache Zeppelin server started at %s" % url)
+            print("  Access Apache Zeppelin server at %s (launching it in your browser window)." % url)
             time.sleep(2)
             webbrowser.open_new_tab(url)
 
