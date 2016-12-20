@@ -57,7 +57,7 @@ else:
     xrange = range
 
 
-SNAPPY_EC2_VERSION = "0.1"
+SNAPPY_EC2_VERSION = "0.7"
 SNAPPY_EC2_DIR = os.path.dirname(os.path.realpath(__file__))
 SNAPPY_AWS_CONF_DIR = SNAPPY_EC2_DIR + "/deploy/home/ec2-user/snappydata"
 SNAPPYDATA_UI_PORT = ""
@@ -1527,7 +1527,6 @@ def real_main():
             else:
                 zp = lead
             url = "http://%s:8080" % zp
-            print("Apache Zeppelin server started at %s" % url)
             print("  Access Apache Zeppelin server at %s (launching it in your browser window)." % url)
             time.sleep(2)
             webbrowser.open_new_tab(url)
