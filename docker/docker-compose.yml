@@ -4,7 +4,7 @@ services:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
      container_name: snappy_locator1
-     command: bash -c "/opt/snappydata/sbin/snappy-locators.sh start -peer-discovery-address=locator1 -client-bind-address=0.0.0.0 && tail -f /dev/null"
+     command: bash -c "/opt/snappydata/sbin/snappy-locators.sh start -peer-discovery-address=locator1 -run-netserver=true -client-bind-address=0.0.0.0 -bind-address=locator1 && tail -f /dev/null"
      ports: 
        - "1527:1527"
      expose:
@@ -14,7 +14,7 @@ services:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
      container_name: snappy_server1
-     command: bash -c "sleep 10 && /opt/snappydata/sbin/snappy-servers.sh start -locators=locator1:10334 -client-bind-address=0.0.0.0 -client-port=1528 && tail -f /dev/null"
+     command: bash -c "sleep 10 && /opt/snappydata/sbin/snappy-servers.sh start -locators=locator1:10334 -client-bind-address=0.0.0.0 -bind-address=server1 && tail -f /dev/null"
      expose:
        - "10334"
        - "1528"

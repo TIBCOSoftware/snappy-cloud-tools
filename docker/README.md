@@ -23,9 +23,19 @@ $ docker run hello-world
 
 **Start a basic cluster with one data node, one lead and one locator**
 
+**For Linux**
+
 ```
 $ docker run -itd --net=host --name snappydata snappydatainc/snappydata start all
 ```
+** For OSX
+If you are running on mac , the "--net=host" will not work , instead use below command 
+
+```
+docker run -d --name=snappydata -p 1527:1527 -p 4040:4040 snappydatainc/snappydata bash -c "/opt/snappydata/sbin/snappy-start-all.sh -client-bind-address=0.0.0.0 -prefer-netserver-ipaddress=true &&  tail -f /dev/null"
+```
+
+
 **Check the Docker process**
 
 ```
@@ -236,29 +246,33 @@ Azure in our case)
 ```
 locator1:
   command: start locator
-  expose:
-    - '1527'
-    - '10334'
-  image: 'snappydatainc/snappydata:latest'
   ports:
-    - '1527:1527'
+   - '1527:1527'
+   - '10334:10334'
+  image: 'snappydatainc/snappydata:latest'
+  restart: always
+  target_num_containers: 1
   working_dir: /opt/snappydata/
 server1:
-  command: 'start server -locators=locator1:10334'
-  expose:
-    - '1527'
+  command: 'bash -c "sleep 10 && start server -locators=locator1:10334 -client-port=1528 -J-Dgemfirexd.hostname-for-clients=$DOCKERCLOUD_CONTAINER_FQDN"'
   image: 'snappydatainc/snappydata:latest'
+  restart: always
+  target_num_containers: 1
   links:
-    - locator1
+   - locator1
+  ports:
+   - '1528:1528'
   sequential_deployment: true
   working_dir: /opt/snappydata/
 snappy-lead1:
-  command: 'start lead -locators=locator1:10334'
+  command: 'bash -c "sleep 20 && start lead -locators=locator1:10334"'
   image: 'snappydatainc/snappydata:latest'
+  restart: always
+  target_num_containers: 1
   links:
-    - server1
+   - server1
   ports:
-    - '4040:4040'
+   - '4040:4040'
   sequential_deployment: true
   working_dir: /opt/snappydata/
 ```  
