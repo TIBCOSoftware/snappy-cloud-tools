@@ -27,7 +27,7 @@ extract() {
     wget -q "${URL}"
     tar -xf "${TAR_NAME}"
 
-    rm -f README.md "${TAR_NAME}" releases
+    rm -f "${TAR_NAME}" releases
   fi
   if [[ -d ${SNAPPY_HOME_DIR_NO_BIN} ]]; then
     SNAPPY_HOME_DIR=${SNAPPY_HOME_DIR_NO_BIN}
@@ -35,10 +35,7 @@ extract() {
 }
 
 getLatestUrl() {
-  rm -f README.md
-  # Extract the url from the README.md to download the latest distribution tar from.
-  wget -q https://github.com/SnappyDataInc/snappydata/blob/master/README.md
-  URL=`grep -o "https://github.com/SnappyDataInc/snappydata/releases/download[a-zA-Z0-9.\/\-]**tar.gz" README.md`
+  URL="https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-0.7-bin.tar.gz"
 }
 
 SNAPPY_HOME_DIR="snappydata-${SNAPPYDATA_VERSION}-bin"
