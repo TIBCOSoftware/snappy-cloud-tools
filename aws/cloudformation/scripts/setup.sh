@@ -59,7 +59,7 @@ cp -R notebook/* ${ZEPPELIN_DIR}/notebook/
 find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${PUBLIC_HOSTNAME}/g"
 
 # Set -Xmx for the server
-INST_TYPE=`cat instance-type.txt`
+INST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
 XMX_VALUE=`grep ${INST_TYPE} server-memory.txt | grep -o "[0-9]*$"`
 
 if [[ $? -ne 0 ]]; then
@@ -108,23 +108,13 @@ CLUSTER_STARTED=`echo $?`
 
 printf "# `date` Started Zeppelin server ${CLUSTER_STARTED}\n" >> status.log
 
-# Update startup script to start the SnappyData and Apache Zeppelin server.
-wget https://github.com/SnappyDataInc/aws-cloud/raw/master/cloudformation/scripts/restart.sh
-if [[ ! -e /etc/rc.local.orig ]]; then
-  cp /etc/rc.local /etc/rc.local.orig
-  printf "#!/bin/sh -e\n\n" > /etc/rc.local
-  printf "bash /snappydata/downloads/restart.sh\n" >> /etc/rc.local
-  printf "exit 0" >> /etc/rc.local
-  printf "# `date` Added restart.sh to startup scripts.\n" >> status.log
-fi
-
 # Check if we need to shutdown the instance after some time.
 wget http://169.254.169.254/latest/dynamic/instance-identity/document
 grep 605015649645 document
 if [[ $? -eq 0 ]]; then
   grep jags-snappy-key /root/.ssh/authorized_keys
   if [[ $? -ne 0 ]]; then
-    shutdown -h 120 &
+    shutdown -h 120 "If you want to continue using this instance, kill the shutdown process." &
     printf "# `date` Shutting down this instance in 120 minutes from now.\n" >> status.log
   fi
 fi
