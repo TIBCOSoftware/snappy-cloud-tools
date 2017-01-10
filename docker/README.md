@@ -28,12 +28,17 @@ $ docker run hello-world
 ```
 $ docker run -itd --net=host --name snappydata snappydatainc/snappydata start all
 ```
-** For OSX
-If you are running on mac , the "--net=host" will not work , instead use below command 
+**For OSX**
+
+On MAC OS docker works bit different than linux, so if we use "--net=host" it may not behave properly. But we can redirect ports manually.
+
+Below is the example command to start SnappyData Cluster on OSX.
 
 ```
-docker run -d --name=snappydata -p 1527:1527 -p 4040:4040 snappydatainc/snappydata bash -c "/opt/snappydata/sbin/snappy-start-all.sh -client-bind-address=0.0.0.0 -prefer-netserver-ipaddress=true &&  tail -f /dev/null"
+docker run -d --name=snappydata -p 4040:4040 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata start all -J-Dgemfirexd.hostname-for-clients=<Machine_IP/Public_IP>
 ```
+
+`-J-Dgemfirexd.hostname-for-clients`  Sets the ip address or host name that this server is to listen on for client connections.
 
 
 **Check the Docker process**
