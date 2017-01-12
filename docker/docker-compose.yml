@@ -4,30 +4,32 @@ services:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
      container_name: snappy_locator1
-     command: bash -c "/opt/snappydata/sbin/snappy-locators.sh start -peer-discovery-address=locator1 -run-netserver=true -client-bind-address=0.0.0.0 -bind-address=locator1 && tail -f /dev/null"
+     command: bash -c "/opt/snappydata/sbin/snappy-locators.sh start -client-bind-address=0.0.0.0 && tail -f /dev/null"
      ports: 
        - "1527:1527"
-     expose:
-       - "10334"
-       - "1527"
+     networks:
+       - snappydata  
  server1:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
      container_name: snappy_server1
-     command: bash -c "sleep 10 && /opt/snappydata/sbin/snappy-servers.sh start -locators=locator1:10334 -client-bind-address=0.0.0.0 -bind-address=server1 && tail -f /dev/null"
-     expose:
-       - "10334"
-       - "1528"
+     command: bash -c "sleep 10 && /opt/snappydata/sbin/snappy-servers.sh start -locators=locator1:10334 -client-bind-address=0.0.0.0 && tail -f /dev/null"
      ports:
-       - "1528:1528"  
+       - "1528:1528"
      depends_on:
        - "locator1"
+     networks:
+       - snappydata
  snappy-lead1:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
      container_name: snappy_lead1
      command: bash -c "sleep 20 && /opt/snappydata/sbin/snappy-leads.sh start -locators=locator1:10334 && tail -f /dev/null"
      depends_on:
-      - "server1"
+       - "server1"
      ports:
-      - "4040:4040"  
+       - "4040:4040"
+     networks:
+       - snappydata  
+networks:
+  snappydata:

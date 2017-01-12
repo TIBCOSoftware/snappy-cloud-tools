@@ -130,6 +130,12 @@ docker-compose version 1.8.1, build 878cff1
 
 Use [docker-compose.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-compose.yml) file to run docker-compose.
 
+Before using docker-compose.yml , We will need to first expose the external IP of machine so that client can make connections on that.
+
+```
+export EXTERNAL_IP=<your machine ip>
+```
+
 
 ```
 $ docker-compose up -d
