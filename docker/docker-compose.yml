@@ -13,7 +13,9 @@ services:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
      container_name: snappy_server1
-     command: bash -c "sleep 10 && /opt/snappydata/sbin/snappy-servers.sh start -locators=locator1:10334 -client-bind-address=0.0.0.0 && tail -f /dev/null"
+     environment:
+       - "EXTERNAL_IP=${EXTERNAL_IP}"
+     command: bash -c "sleep 10 && /opt/snappydata/sbin/snappy-servers.sh start -locators=locator1:10334 -client-bind-address=0.0.0.0 -J-Dgemfirexd.hostname-for-clients=${EXTERNAL_IP} && tail -f /dev/null"
      ports:
        - "1528:1528"
      depends_on:
