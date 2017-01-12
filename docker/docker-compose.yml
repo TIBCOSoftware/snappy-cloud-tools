@@ -3,19 +3,20 @@ services:
  locator1:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
-     container_name: snappy_locator1
-     command: bash -c "/opt/snappydata/sbin/snappy-locators.sh start -client-bind-address=0.0.0.0 && tail -f /dev/null"
+     container_name: locator1
+     command: start locator
      ports: 
        - "1527:1527"
+       - '10334:10334'
      networks:
        - snappydata  
  server1:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
-     container_name: snappy_server1
+     container_name: server1
      environment:
        - "EXTERNAL_IP=${EXTERNAL_IP}"
-     command: bash -c "sleep 10 && /opt/snappydata/sbin/snappy-servers.sh start -locators=locator1:10334 -client-bind-address=0.0.0.0 -J-Dgemfirexd.hostname-for-clients=${EXTERNAL_IP} && tail -f /dev/null"
+     command: bash -c "sleep 10 && start server -locators=locator1:10334 -client-port=1528 -J-Dgemfirexd.hostname-for-clients=${EXTERNAL_IP}"
      ports:
        - "1528:1528"
      depends_on:
@@ -26,7 +27,7 @@ services:
      image: snappydatainc/snappydata
      working_dir: /opt/snappydata/
      container_name: snappy_lead1
-     command: bash -c "sleep 20 && /opt/snappydata/sbin/snappy-leads.sh start -locators=locator1:10334 && tail -f /dev/null"
+     command: bash -c "sleep 20 && start lead -locators=locator1:10334"
      depends_on:
        - "server1"
      ports:
