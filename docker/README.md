@@ -180,15 +180,43 @@ locator1_1      | SnappyData Locator pid: 87 status: running
 
 Above logs shows your cluster has been started successfully on three containers.
 
-**Connect SnappyData with the Command Line Client on server1_1**
+
+**Connect SnappyData with the Command Line Client**
+
+Also you can check with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client.  Using jar [file](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-client-1.5.3.jar) available on official SnappyData repo
+
+Below is the example on how to connect with snappy-shell
+Download the binary files from snappydata [repo](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-0.7-bin.tar.gz) 
+
+Go to `bin/` directory and start snappy-shell
 
 ```
-$ docker exec -it server1_1 ./bin/snappy-shell
+bin$ ./snappy-shell
+SnappyData version 0.7
+snappy>
 ```
+Make jdbc connection
 
 ```
-$ snappy> connect client 'localhost:1528';
+$ snappy> connect client '<Your Machine IP>:1527';
+Using CONNECTION0
+snappy>
 ```
+List members
+
+```
+snappy> show members;
+ID                            |HOST                          |KIND                          |STATUS              |NETSERVERS                    |SERVERGROUPS
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+3796bf1ff482(135)<v0>:5840    |3796bf1ff482                  |locator(normal)               |RUNNING             |3796bf1ff482/172.18.0.2[1527] |
+7b54228d4d02(131)<v1>:50185   |7b54228d4d02                  |datastore(normal)             |RUNNING             |192.168.1.130/172.18.0.3[1528]|
+e847fed458a6(130)<v2>:35444   |e847fed458a6                  |accessor(normal)              |RUNNING             |                              |IMPLICIT_LEADER_SERVERGROUP
+
+3 rows selected
+snappy>
+```
+
+Note : You can connect with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client.  Using jar [file](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-client-1.5.3.jar) available on official SnappyData repository.
 
 **View Connections**
 
