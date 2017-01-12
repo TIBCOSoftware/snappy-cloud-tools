@@ -183,8 +183,6 @@ Above logs shows your cluster has been started successfully on three containers.
 
 **Connect SnappyData with the Command Line Client**
 
-Also you can check with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client.  Using jar [file](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-client-1.5.3.jar) available on official SnappyData repo
-
 Below is the example on how to connect with snappy-shell
 Download the binary files from snappydata [repo](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-0.7-bin.tar.gz) 
 
