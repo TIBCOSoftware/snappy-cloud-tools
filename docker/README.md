@@ -135,7 +135,7 @@ Before using docker-compose.yml , We will need to first expose the external IP o
 ```
 export EXTERNAL_IP=<your machine ip>
 ```
-
+After downloading the yml file run the snappydata cluster using below command.
 
 ```
 $ docker-compose -f docker-compose.yml up -d
@@ -186,6 +186,9 @@ Above logs shows your cluster has been started successfully on three containers.
 Below is the example on how to connect with snappy-shell
 Download the binary files from snappydata [repo](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-0.7-bin.tar.gz) 
 
+Note : You can connect SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client. Use the snappydata-store-client-1.5.0.jar file available on official SnappyData Release page.
+Links https://github.com/SnappyDataInc/snappydata/releases
+
 Go to `bin/` directory and start snappy-shell
 
 ```
@@ -214,8 +217,6 @@ e847fed458a6(130)<v2>:35444   |e847fed458a6                  |accessor(normal)  
 snappy>
 ```
 
-Note : You can connect with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client.  Using jar [file](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-client-1.5.3.jar) available on official SnappyData repository.
-
 **View Connections**
 
 ```
@@ -241,8 +242,6 @@ Removing network docker_default
 ```
 
 Note : After removing containers from docker engine will destroy saved data in to the containers. 
-
-
 
 ##Run SnappyData on Docker Cloud
 Image : snappydatainc/snappydata Tag : latest
