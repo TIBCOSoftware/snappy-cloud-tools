@@ -29,6 +29,7 @@ Before you begin, ensure that:
  $ docker run -itd --net=host --name snappydata snappydatainc/snappydata start all
  ```
  **For Mac OS**
+
  If you are using MAC OS you need to redirect the ports manually.
  Note: If you use "--net=host", it may not work correctly on the Mac OS.
 
