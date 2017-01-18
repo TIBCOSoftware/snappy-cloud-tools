@@ -1,8 +1,7 @@
 ## Table of Contents
 
-
 * [Setting up Cluster with SnappyData Docker Image](#setting-up-cluster-with-snappydata-docker-image)
-* [Using docker-compose on Multiple Containers](#using-multiple-containers-with-docker-compose)
+* [Using Multiple Containers with Docker Compose](#using-multiple-containers-with-docker-compose)
 * [SnappyData on Docker Cloud](#run-snappydata-on-docker-cloud)
 * [SnappyData with Docker Swarm](#snappydata-with-docker-swarm)
 * [Using Kubernetes](#using-kubernetes)
@@ -10,238 +9,236 @@
 ## Setting up Cluster with SnappyData Docker Image
 ###Prerequisites
 
-* This guide assumes that Docker have been installed and configured. Refer to [Docker documentation](http://docs.docker.com/installation) for more information.
-* Ensure that Docker containers have access to at least 4GB of RAM on your machine. 
-* If you are running Docker on a Mac or PC you may need to modify the RAM used by the virtual machine which is
-running the Docker daemon. For more information, refer to the Docker documentation.
+Before you begin, ensure that:
+* You have Docker installed, configured and it runs successfully on your machine. Refer to the [Docker documentation](http://docs.docker.com/installation) for more information on installing Docker.
+* The Docker containers have access to at least 4GB of RAM on your machine.
+* To run Docker you may need to modify the RAM used by the virtual machine which is running the Docker daemon. Refer to the Docker documentation for more information.
 
-**Verify that your installation is working correctly**
+1. **Verify that your installation is working correctly**
 
-```
-$ docker run hello-world
-```
+ Run the following command on your machine:
+ ```
+ $ docker run hello-world
+ ```
 
-**Start a basic cluster with one data node, one lead and one locator**
+2. **Start a basic cluster with one data node, one lead and one locator**
 
-**For Linux**
+ **For Linux**
 
-```
-$ docker run -itd --net=host --name snappydata snappydatainc/snappydata start all
-```
-**For OSX**
+ ```
+ $ docker run -itd --net=host --name snappydata snappydatainc/snappydata start all
+ ```
+ **For Mac OS**
+ If you are using MAC OS you need to redirect the ports manually.
+ Note: If you use "--net=host", it may not work correctly on the Mac OS.
 
-On MAC OS docker works bit different than linux, so if we use "--net=host" it may not behave properly. But we can redirect ports manually.
+ Run the following command to start SnappyData Cluster on Mac OS:
 
-Below is the example command to start SnappyData Cluster on OSX.
+ ```
+ docker run -d --name=snappydata -p 4040:4040 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata start all -J-Dgemfirexd.hostname-for-clients=<Machine_IP/Public_IP>
+ ```
 
-```
-docker run -d --name=snappydata -p 4040:4040 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata start all -J-Dgemfirexd.hostname-for-clients=<Machine_IP/Public_IP>
-```
+ The `-J-Dgemfirexd.hostname-for-clients` parameter sets the IP Address or Host name that this server listens on for client connections.
 
-`-J-Dgemfirexd.hostname-for-clients`  Sets the ip address or host name that this server is to listen on for client connections.
+ <Note>Note: It may take some time for this command to complete execution.</Note>
 
+3. **Check the Docker Process**
 
-**Check the Docker process**
+ ```
+ $ docker ps -a
+ 
+ ```
 
-```
-$ docker ps -a
-```
-<Note>Note: Wait for a few seconds before running the next command.</Note>
+4. **Check the Docker Logs**<br>
+ Run the following command to view the logs of the container process.
+ 
+  ```
+ $ docker logs snappydata
+ starting sshd service
+ Starting sshd:
+  [ OK ]
+ Starting SnappyData Locator using peer discovery on: localhost[10334]
+ Starting DRDA server for SnappyData at address localhost/127.0.0.1[1527]
+ Logs generated in /opt/snappydata/work/localhost-locator-1/snappylocator.log
+ SnappyData Locator pid: 110 status: running
+ Starting SnappyData Server using locators for peer discovery: localhost:10334
+ Starting DRDA server for SnappyData at address localhost/127.0.0.1[1527]
+ Logs generated in /opt/snappydata/work/localhost-server-1/snappyserver.log
+ SnappyData Server pid: 266 status: running
+ Distributed system now has 2 members.
+ Other members: localhost(110:locator)<v0>:63369
+ Starting SnappyData Leader using locators for peer discovery: localhost:10334
+ Logs generated in /opt/snappydata/work/localhost-lead-1/snappyleader.log
+ SnappyData Leader pid: 440 status: running
+ Distributed system now has 3 members.
+ Other members: 192.168.1.130(266:datastore)<v1>:47290, localhost(110:locator)<v0>:63369
+ ```
+ The query results display *Distributed system now has 3 members*.
 
-**Check the Docker logs**<br>
-The following command displays the logs of container process. The query results display “Distributed system now has 3 members”.
+5. **Connect SnappyData with the Command Line Client**
+ ```
+ $ docker exec -it snappydata ./bin/snappy-shell
+ ```
+ 
+6. **Connect Client on port “1527”**
 
+ ```
+ $ snappy> connect client 'localhost:1527';
+ ```
 
-```
-$ docker logs snappydata
-starting sshd service
-Starting sshd:
- [ OK ]
-Starting SnappyData Locator using peer discovery on: localhost[10334]
-Starting DRDA server for SnappyData at address localhost/127.0.0.1[1527]
-Logs generated in /opt/snappydata/work/localhost-locator-1/snappylocator.log
-SnappyData Locator pid: 110 status: running
-Starting SnappyData Server using locators for peer discovery: localhost:10334
-Starting DRDA server for SnappyData at address localhost/127.0.0.1[1527]
-Logs generated in /opt/snappydata/work/localhost-server-1/snappyserver.log
-SnappyData Server pid: 266 status: running
-Distributed system now has 2 members.
-Other members: localhost(110:locator)<v0>:63369
-Starting SnappyData Leader using locators for peer discovery: localhost:10334
-Logs generated in /opt/snappydata/work/localhost-lead-1/snappyleader.log
-SnappyData Leader pid: 440 status: running
-Distributed system now has 3 members.
-Other members: 192.168.1.130(266:datastore)<v1>:47290, localhost(110:locator)<v0>:63369
+7. **View Connections**
 
-```
+ ```
+ snappy> show connections;
+ CONNECTION0* -
+  jdbc:gemfirexd://localhost[1527]/
+ * = current connection
+ ```
+8. **Check Member Status**
 
-**Connect SnappyData with the Command Line Client**
-```
-$ docker exec -it snappydata ./bin/snappy-shell
-```
-**Connect Client on port “1527”**
+ ```
+ snappy> show members;
+ ```
 
-```
-$ snappy> connect client 'localhost:1527';
-```
+9. **Stop the Cluster**
 
-**View Connections**
+ ```
+ $ docker exec -it snappydata ./sbin/snappy-stop-all.sh
+ The SnappyData Leader has stopped.
+ The SnappyData Server has stopped.
+ The SnappyData Locator has stopped.
+ ```
 
-```
-snappy> show connections;
-CONNECTION0* -
- jdbc:gemfirexd://localhost[1527]/
-* = current connection
+10. **Stop SnappyData Container**
+ ```
+ $ docker stop snappydata
+ ```
 
-```
-**Check Member Status**
+##Using Multiple Containers with Docker Compose
 
-```
-snappy> show members;
-```
+Download and install the latest version of Docker compose. Refer to the [Docker documentation](https://docs.docker.com/compose/install/) for more information.
 
-**Stop the Cluster**
+1. **Verify the Installation**
+Check the version of Docker Compose to verify the installation.
 
-```
-$ docker exec -it snappydata ./sbin/snappy-stop-all.sh
-The SnappyData Leader has stopped.
-The SnappyData Server has stopped.
-The SnappyData Locator has stopped.
-```
+ ```
+ $ docker-compose -v
+ docker-compose version 1.8.1, build 878cff1
+ ```
 
-**Stop SnappyData Container**
-```
-$ docker stop snappydata
-```
+2. **Expose the External IP of machine so that client can make connections on that.**
 
+ ```
+ export EXTERNAL_IP=<your machine ip>
+ ```
+ 
+3. **Use the compose file (docker-compose.yml) file to run Docker Compose.**
 
+ Download the [docker-compose.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-compose.yml) file, and then run it from the downloaded location using the following command:
 
+ ```
+ $ docker-compose -f docker-compose.yml up -d
+ Creating network "docker_default" with the default driver
+ Creating locator1
+ Creating server1
+ Creating snappy-lead1
+ ```
+ Three containers are created. 
 
-###Using Multiple Containers with docker-compose
-
-Install docker-compose from [Docker documentation](https://docs.docker.com/compose/install/) 
-
-Verify installation by checking version of docker-compose
-
-```
-$ docker-compose -v
-docker-compose version 1.8.1, build 878cff1
-```
-
-Use [docker-compose.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/docker-compose.yml) file to run docker-compose.
-
-Before using docker-compose.yml , We will need to first expose the external IP of machine so that client can make connections on that.
-
-```
-export EXTERNAL_IP=<your machine ip>
-```
-After downloading the yml file run the snappydata cluster using below command.
-
-```
-$ docker-compose -f docker-compose.yml up -d
-Creating network "docker_default" with the default driver
-Creating locator1_1
-Creating server1_1
-Creating snappy-lead1_1
-```
-
-It will create three containers, 
-
-```
+ ```
 $ docker-compose ps
-        Name                       Command               State                                          Ports
-----------------------------------------------------------------------------------------------------------------------------------------------------
-locator1_1       bash -c /opt/snappydata/sb ...   Up      10334/tcp, 0.0.0.0:1527->1527/tcp, 1528/tcp, 4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
-server1_1        bash -c sleep 10 && /opt/s ...   Up      10334/tcp, 1527/tcp, 0.0.0.0:1528->1528/tcp, 4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
-snappy-lead1_1   bash -c sleep 20 && /opt/s ...   Up      10334/tcp, 1527/tcp, 1528/tcp, 0.0.0.0:4040->4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
-```
+     Name                  Command               State                        Ports                       
+ --------------------------------------------------------------------------------------------------------
+ locator1       start locator                    Up      0.0.0.0:10334->10334/tcp, 0.0.0.0:1527->1527/tcp 
+ server1        bash -c sleep 10 && start  ...   Up      0.0.0.0:1528->1528/tcp                           
+ snappy_lead1   bash -c sleep 20 && start  ...   Up      0.0.0.0:4040->4040/tcp                           
 
-Check the logs and see what is running inside docker-compose
+ ```
 
-```
-$ docker-compose logs
-Attaching to snappy-lead1_1, server1_1, locator1_1
-server1_1       | Starting SnappyData Server using locators for peer discovery: locator1:10334
-server1_1       | Starting DRDA server for SnappyData at address server1/172.18.0.3[1528]
-snappy-lead1_1  | Starting SnappyData Leader using locators for peer discovery: locator1:10334
-server1_1       | Logs generated in /opt/snappydata/work/localhost-server-1/snappyserver.log
-snappy-lead1_1  | Logs generated in /opt/snappydata/work/localhost-lead-1/snappyleader.log
-server1_1       | SnappyData Server pid: 83 status: running
-snappy-lead1_1  | SnappyData Leader pid: 83 status: running
-server1_1       |   Distributed system now has 2 members.
-snappy-lead1_1  |   Distributed system now has 3 members.
-snappy-lead1_1  |   Other members: docker_server1_1(83:datastore)<v1>:53707, locator1(87:locator)<v0>:44102
-server1_1       |   Other members: locator1(87:locator)<v0>:44102
-locator1_1      | Starting SnappyData Locator using peer discovery on: locator1[10334]
-locator1_1      | Starting DRDA server for SnappyData at address locator1/172.18.0.2[1527]
-locator1_1      | Logs generated in /opt/snappydata/work/localhost-locator-1/snappylocator.log
-locator1_1      | SnappyData Locator pid: 87 status: running
-```
+4. **View the logs**
 
-Above logs shows your cluster has been started successfully on three containers.
+ Run the following command to view the logs and to verify what is running inside the Docker Compose.
+ ```
+ $ docker-compose logs
+ Attaching to snappy-lead1, server1, locator1
+ server1       | Starting SnappyData Server using locators for peer discovery: locator1:10334
+ server1       | Starting DRDA server for SnappyData at address server1/172.18.0.3[1528]
+ snappy-lead1  | Starting SnappyData Leader using locators for peer discovery: locator1:10334
+ server1       | Logs generated in /opt/snappydata/work/localhost-server-1/snappyserver.log
+ snappy-lead1  | Logs generated in /opt/snappydata/work/localhost-lead-1/snappyleader.log
+ server1       | SnappyData Server pid: 83 status: running
+ snappy-lead1  | SnappyData Leader pid: 83 status: running
+ server1       |   Distributed system now has 2 members.
+ snappy-lead1  |   Distributed system now has 3 members.
+ snappy-lead1  |   Other members: docker_server1(83:datastore)<v1>:53707, locator1(87:locator)<v0>:44102
+ server1       |   Other members: locator1(87:locator)<v0>:44102
+ locator1      | Starting SnappyData Locator using peer discovery on: locator1[10334]
+ locator1      | Starting DRDA server for SnappyData at address locator1/172.18.0.2[1527]
+ locator1      | Logs generated in /opt/snappydata/work/localhost-locator-1/snappylocator.log
+ locator1      | SnappyData Locator pid: 87 status: running
+ ```
 
+ The above logs displays that the cluster has started successfully on the three containers.
 
-**Connect SnappyData with the Command Line Client**
+5. **Connect SnappyData with the Command Line Client**
 
-Below is the example on how to connect with snappy-shell
-Download the binary files from snappydata [repo](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-0.7-bin.tar.gz) 
+ The following example illustrates how to connect with snappy-shell. 
+ 
+ [Download](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-0.7-bin.tar.gz) the binary files from the SnappyData repository and go the location of the **bin** directory in the SnappyData home directory, and then start the snappy-shell.
 
-Note : You can connect SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client. Use the snappydata-store-client-1.5.0.jar file available on official SnappyData Release page.
-Links https://github.com/SnappyDataInc/snappydata/releases
+ ```
+ bin$ ./snappy-shell
+ SnappyData version 0.7
+ snappy>
+ ```
+  Note: You can also connect to SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client using the **snappydata-store-client-1.5.0.jar** file available on the official [SnappyData Release page](#https://github.com/SnappyDataInc/snappydata/releases). Refer to the documentation provided by your client tool for instructions on how to make a JDBC connection.
+ 
+6. Make a JDBC connection
 
-Go to `bin/` directory and start snappy-shell
+ ```
+ $ snappy> connect client '<Your Machine IP>:1527';
+ Using CONNECTION0
+ snappy>
+ ```
+ 
+7. List Members
 
-```
-bin$ ./snappy-shell
-SnappyData version 0.7
-snappy>
-```
-Make jdbc connection
+ ```
+ snappy> show members;
+ ID                            |HOST                          |KIND                          |STATUS              |NETSERVERS                    |SERVERGROUPS
+ -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 3796bf1ff482(135)<v0>:5840    |3796bf1ff482                  |locator(normal)               |RUNNING             |3796bf1ff482/172.18.0.2[1527] |
+ 7b54228d4d02(131)<v1>:50185   |7b54228d4d02                  |datastore(normal)             |RUNNING             |192.168.1.130/172.18.0.3[1528]|
+ e847fed458a6(130)<v2>:35444   |e847fed458a6                  |accessor(normal)              |RUNNING             |                              |IMPLICIT_LEADER_SERVERGROUP
 
-```
-$ snappy> connect client '<Your Machine IP>:1527';
-Using CONNECTION0
-snappy>
-```
-List members
+ 3 rows selected
+ snappy>
+ ```
 
-```
-snappy> show members;
-ID                            |HOST                          |KIND                          |STATUS              |NETSERVERS                    |SERVERGROUPS
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-3796bf1ff482(135)<v0>:5840    |3796bf1ff482                  |locator(normal)               |RUNNING             |3796bf1ff482/172.18.0.2[1527] |
-7b54228d4d02(131)<v1>:50185   |7b54228d4d02                  |datastore(normal)             |RUNNING             |192.168.1.130/172.18.0.3[1528]|
-e847fed458a6(130)<v2>:35444   |e847fed458a6                  |accessor(normal)              |RUNNING             |                              |IMPLICIT_LEADER_SERVERGROUP
+8. **View Connections**
 
-3 rows selected
-snappy>
-```
+ ```
+ snappy> show connections;
+ CONNECTION0* -
+  jdbc:gemfirexd://localhost[1528]/
+ * = current connection
+ ```
 
-**View Connections**
+9. **Stop Docker Compose**
 
-```
-snappy> show connections;
-CONNECTION0* -
- jdbc:gemfirexd://localhost[1528]/
-* = current connection
-```
+ To stop and remove containers from Docker Engine
 
-**Stopping docker-compose**
-
-To stop and remove containers from docker-engine
-
-```
-$ docker-compose down
-Stopping snappy-lead1_1 ... done
-Stopping server1_1 ... done
-Stopping locator1_1 ... done
-Removing snappy-lead1_1 ... done
-Removing server1_1 ... done
-Removing locator1_1 ... done
-Removing network docker_default
-```
-
-Note : After removing containers from docker engine will destroy saved data in to the containers. 
+ ```
+ $ docker-compose -f docker-compose.yml down
+ Stopping snappy_lead1 ... done
+ Stopping server1 ... done
+ Stopping locator1 ... done
+ Removing snappy_lead1 ... done
+ Removing server1 ... done
+ Removing locator1 ... done
+ Removing network dockercompose_snappydata
+ ```
+ Note : When you remove containers from the Docker engine, any data that exists on the containers is destroyed. 
 
 ##Run SnappyData on Docker Cloud
 Image : snappydatainc/snappydata Tag : latest
@@ -250,7 +247,7 @@ Image : snappydatainc/snappydata Tag : latest
 Docker Cloud is Docker's official platform for building, managing and deploying Docker containers across a variety of cloud providers and a provides features ideal for Development workflows. 
 
 to connect cloud on AWS,AZURE and Digital Ocean follow the official
-[documentation](https://docs.docker.com/docker-cloud/infrastructure/link-aws/) on docker cloud
+[documentation](https://docs.docker.com/docker-cloud/infrastructure/link-aws/) on Docker cloud
 
 
 **Prerequisites**
@@ -272,8 +269,7 @@ providers.
 <br><br>
 <p style="text-align: center;"><img alt="Refresh" src="images/Page-1-Image-1.png"></p>
 <br><br>
-After Couple of minutes your node will be ready ( see below example with
-Azure in our case)
+After Couple of minutes your node will be ready (see below example with Azure in our case)
 <br><br>
 <p style="text-align: center;"><img alt="Refresh" src="images/Page-2-Image-2.png"></p>
 <br><br>
@@ -342,10 +338,10 @@ The real potential in the Docker Cloud lies in its simple scalability through a 
 
 ##SnappyData With Docker Swarm
 
-This article explains how to setup multi-host snappydata cluster using docker swarm , docker-machine and docker-compose
+This article explains how to setup multi-host snappydata cluster using Docker Swarm , Docker Machine and Docker Compose
 
 ###Prerequisites
-Before you begin, make sure you have a system on your network with the latest version of Docker Engine , Docker Machine and docker-compose installed. The example also relies on VirtualBox. If you installed on a Mac or Windows with Docker Toolbox, you have all of these installed already.
+Before you begin, make sure you have a system on your network with the latest version of Docker Engine , Docker Machine and Docker Compose installed. The example also relies on VirtualBox. If you installed on a Mac or Windows with Docker Toolbox, you have all of these installed already.
 
 **Step 1: Set up a key-value store**
 
@@ -537,7 +533,7 @@ services:
       - "4040:4040"
 ```
 
-Run the docker-compose with docker-compose.yml file
+Run the Docker-compose with **docker-compose.yml** file
 
 ```
 $ docker-compose -f docker-compose.yml up -d
