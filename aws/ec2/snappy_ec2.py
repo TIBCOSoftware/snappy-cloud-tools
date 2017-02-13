@@ -493,7 +493,6 @@ def launch_cluster(conn, opts, cluster_name):
         locator_group.authorize('tcp', 50030, 50030, authorized_address)
         locator_group.authorize('tcp', 50070, 50070, authorized_address)
         locator_group.authorize('tcp', 60070, 60070, authorized_address)
-        locator_group.authorize('tcp', 4040, 4045, authorized_address)
         # HDFS NFS gateway requires 111,2049,4242 for tcp & udp
         locator_group.authorize('tcp', 111, 111, authorized_address)
         locator_group.authorize('udp', 111, 111, authorized_address)
@@ -711,22 +710,23 @@ def launch_cluster(conn, opts, cluster_name):
         my_req_ids = []
         for zone in zones:
             num_stores_this_zone = get_partition(opts.stores, num_zones, i)
-            store_reqs = conn.request_spot_instances(
-                price=opts.spot_price,
-                image_id=opts.ami,
-                launch_group="launch-group-%s" % cluster_name,
-                placement=zone,
-                count=num_stores_this_zone,
-                key_name=opts.key_pair,
-                security_group_ids=[store_group.id] + additional_group_ids,
-                instance_type=opts.instance_type,
-                block_device_map=block_map,
-                subnet_id=opts.subnet_id,
-                placement_group=opts.placement_group,
-                user_data=user_data_content,
-                instance_profile_name=opts.instance_profile_name)
-            my_req_ids += [req.id for req in store_reqs]
-            i += 1
+            if num_stores_this_zone > 0:
+                store_reqs = conn.request_spot_instances(
+                    price=opts.spot_price,
+                    image_id=opts.ami,
+                    launch_group="launch-group-%s" % cluster_name,
+                    placement=zone,
+                    count=num_stores_this_zone,
+                    key_name=opts.key_pair,
+                    security_group_ids=[store_group.id] + additional_group_ids,
+                    instance_type=opts.instance_type,
+                    block_device_map=block_map,
+                    subnet_id=opts.subnet_id,
+                    placement_group=opts.placement_group,
+                    user_data=user_data_content,
+                    instance_profile_name=opts.instance_profile_name)
+                my_req_ids += [req.id for req in store_reqs]
+                i += 1
 
         print("Waiting for spot instances to be granted...")
         try:
@@ -834,26 +834,27 @@ def launch_cluster(conn, opts, cluster_name):
     lead_nodes = []
     for zone in zones:
         num_leads_this_zone = get_partition(opts.leads, num_zones, i)
-        lead_res = image.run(
-            key_name=opts.key_pair,
-            security_group_ids=[lead_group.id] + additional_group_ids,
-            instance_type=opts.instance_type,
-            placement=zone,
-            min_count=num_leads_this_zone,
-            max_count=num_leads_this_zone,
-            block_device_map=block_map,
-            subnet_id=opts.subnet_id,
-            placement_group=opts.placement_group,
-            user_data=user_data_content,
-            instance_initiated_shutdown_behavior=opts.instance_initiated_shutdown_behavior,
-            instance_profile_name=opts.instance_profile_name)
-        lead_nodes += lead_res.instances
-        print("Launched {s} lead{plural_s} in {z}, regid = {r}".format(
-              s=num_leads_this_zone,
-              plural_s=('' if num_leads_this_zone == 1 else 's'),
-              z=zone,
-              r=lead_res.id))
-        i += 1
+        if num_leads_this_zone > 0:
+            lead_res = image.run(
+                key_name=opts.key_pair,
+                security_group_ids=[lead_group.id] + additional_group_ids,
+                instance_type=opts.instance_type,
+                placement=zone,
+                min_count=num_leads_this_zone,
+                max_count=num_leads_this_zone,
+                block_device_map=block_map,
+                subnet_id=opts.subnet_id,
+                placement_group=opts.placement_group,
+                user_data=user_data_content,
+                instance_initiated_shutdown_behavior=opts.instance_initiated_shutdown_behavior,
+                instance_profile_name=opts.instance_profile_name)
+            lead_nodes += lead_res.instances
+            print("Launched {s} lead{plural_s} in {z}, regid = {r}".format(
+                  s=num_leads_this_zone,
+                  plural_s=('' if num_leads_this_zone == 1 else 's'),
+                  z=zone,
+                  r=lead_res.id))
+            i += 1
 
     zeppelin_nodes = []
     if opts.with_zeppelin is not None and opts.with_zeppelin == "non-embedded":
