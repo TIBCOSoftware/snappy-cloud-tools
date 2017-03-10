@@ -186,11 +186,11 @@ $ docker-compose ps
 
  The following example illustrates how to connect with snappy-shell. 
  
- [Download](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-0.7-bin.tar.gz) the binary files from the SnappyData repository. Go the location of the **bin** directory in the SnappyData home directory, and then start the snappy-shell.
+ [Download](https://github.com/SnappyDataInc/snappydata/releases/download/v0.8/snappydata-0.8-bin.tar.gz) the binary files from the SnappyData repository. Go the location of the **bin** directory in the SnappyData home directory, and then start the snappy-shell.
 
  ```
  bin$ ./snappy-shell
- SnappyData version 0.7
+ SnappyData version 0.8
  snappy>
  ```
   Note: You can also connect to SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client using the **snappydata-store-client-1.5.0.jar** file available on the official [SnappyData Release page](#https://github.com/SnappyDataInc/snappydata/releases). Refer to the documentation provided by your client tool for instructions on how to make a JDBC connection.
@@ -295,13 +295,13 @@ Using Docker Cloud, connect to a cloud hosting provider of your choice. Currentl
  ![Node](images/verify_containers.png) 
 
 4. **Verify connection with snappy-shell ** 
- a. Download the binary files from the [SnappyData repository](https://github.com/SnappyDataInc/snappydata/releases/download/v0.7/snappydata-0.7-bin.tar.gz) and go to the location of the **bin** directory in the SnappyData home directory.
+ a. Download the binary files from the [SnappyData repository](https://github.com/SnappyDataInc/snappydata/releases/download/v0.8/snappydata-0.8-bin.tar.gz) and go to the location of the **bin** directory in the SnappyData home directory.
 
  b. Using the command line client, connect to SnappyData and then start the snappy-shell.
 
  ```
  bin$ ./snappy-shell
- SnappyData version 0.7
+ SnappyData version 0.8
  snappy>
  ```
   Note: You can also connect to SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client using the **snappydata-store-client-1.5.0.jar** file available on the official [SnappyData Release page](#https://github.com/SnappyDataInc/snappydata/releases). Refer to the documentation provided by your client tool for instructions on how to make a JDBC connection.

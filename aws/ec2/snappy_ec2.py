@@ -57,7 +57,7 @@ else:
     xrange = range
 
 
-SNAPPY_EC2_VERSION = "0.7"
+SNAPPY_EC2_VERSION = "0.8"
 SNAPPY_EC2_DIR = os.path.dirname(os.path.realpath(__file__))
 SNAPPY_AWS_CONF_DIR = SNAPPY_EC2_DIR + "/deploy/home/ec2-user/snappydata"
 SNAPPYDATA_UI_PORT = ""
@@ -553,7 +553,8 @@ def launch_cluster(conn, opts, cluster_name):
         lead_group.authorize('tcp', 50030, 50030, authorized_address)
         lead_group.authorize('tcp', 50070, 50070, authorized_address)
         lead_group.authorize('tcp', 60070, 60070, authorized_address)
-        lead_group.authorize('tcp', 4040, 4045, authorized_address)
+        lead_group.authorize('tcp', 4040, 4040, authorized_address)
+        lead_group.authorize('tcp', 5050, 5050, authorized_address)
         # HDFS NFS gateway requires 111,2049,4242 for tcp & udp
         lead_group.authorize('tcp', 111, 111, authorized_address)
         lead_group.authorize('udp', 111, 111, authorized_address)
@@ -1518,7 +1519,7 @@ def real_main():
         setup_cluster(conn, locator_nodes, lead_nodes, server_nodes, zeppelin_nodes, opts, True)
         lead = get_dns_name(lead_nodes[0], opts.private_ips)
         if SNAPPYDATA_UI_PORT == "":
-            SNAPPYDATA_UI_PORT = '4040'
+            SNAPPYDATA_UI_PORT = '5050'
         url = "http://%s:%s" % (lead, SNAPPYDATA_UI_PORT)
         print("SnappyData Unified cluster started.")
         print("  Access Apache Spark UI and SnappyData Dashboard at %s" % url)
