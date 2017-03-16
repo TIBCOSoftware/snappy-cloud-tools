@@ -1,36 +1,20 @@
 #!/bin/bash -x
 # SnappyData CloudFormation script
 
-mkdir -p /snappydata/downloads
-cd /snappydata/downloads
+mkdir -p ${DOWNLOADS_DIR}
+cd ${DOWNLOADS_DIR}
 printf "# `date` Moved to downloads dir $?\n" >> status.log
 
 # Initialize various variables.
-ZEPPELIN_DIR=zeppelin-0.6.1-bin-netinst
-
-SNAPPYDATA_URL=`cat snappydata-url.txt`
 SNAPPYDATA_TAR_NAME=`echo ${SNAPPYDATA_URL} | cut -d'/' -f 9`
-SNAPPYDATA_DIR=`echo ${SNAPPYDATA_TAR_NAME%.tar.gz}`
-printf "# `date` SnappyData dir ${SNAPPYDATA_DIR} $?\n" >> status.log
+SNAPPYDATA_EXTRACTED=`echo ${SNAPPYDATA_TAR_NAME%.tar.gz}`
+printf "# `date` SnappyData tar name ${SNAPPYDATA_TAR_NAME} $?\n" >> status.log
 
-INTERPRETER_URL=`cat interpreter-url.txt`
 INTERPRETER_JAR_NAME=`echo ${INTERPRETER_URL} | cut -d'/' -f 9`
 printf "# `date` SnappyData interpreter name ${INTERPRETER_JAR_NAME} $?\n" >> status.log
 SNAPPY_INTERPRETER_DIR=${ZEPPELIN_DIR}/interpreter/snappydata
 
-NOTEBOOK_URL=`cat notebook-url.txt`
-
-# Edit /etc/hosts so that the cluster is available outside the VPC.
-if [[ ! -e /etc/hosts.orig ]]; then
-  mv /etc/hosts /etc/hosts.orig
-  printf "# `date` Backed up /etc/hosts $?\n" >> status.log
-fi
-cat /etc/hosts.orig | grep -v 127.0.0.1 > /etc/hosts
-PRIVATE_IP=`wget -q -O - http://169.254.169.254/latest/meta-data/local-ipv4`
 PUBLIC_HOSTNAME=`wget -q -O - http://169.254.169.254/latest/meta-data/public-hostname`
-printf "\n${PRIVATE_IP} ${PUBLIC_HOSTNAME} \n" >> /etc/hosts
-printf "${PRIVATE_IP} localhost \n\n" >> /etc/hosts
-printf "# `date` Modified /etc/hosts $?\n" >> status.log
 
 # Generate ssh keys for passwordless-ssh
 mkdir -p ~/.ssh
@@ -45,6 +29,7 @@ if [[ ! -d ${SNAPPYDATA_DIR} ]]; then
   wget ${SNAPPYDATA_URL}
   printf "# `date` Downloaded snappydata distribution $?\n" >> status.log
   tar -xf ${SNAPPYDATA_TAR_NAME}
+  sudo mv ${SNAPPYDATA_EXTRACTED} ${SNAPPYDATA_DIR}
   printf "# `date` Extracted snappydata distribution $?\n" >> status.log
 fi
 
@@ -55,22 +40,23 @@ tar -xf notebook.tar.gz
 printf "# `date` Extracted notebook $?\n" >> status.log
 
 # Copy the notebook to Zeppelin and update the local hostname.
+rm -rf ${ZEPPELIN_DIR}/notebook/*
 cp -R notebook/* ${ZEPPELIN_DIR}/notebook/
 find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${PUBLIC_HOSTNAME}/g"
 
 # Set -Xmx for the server
 INST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
-XMX_VALUE=`grep ${INST_TYPE} server-memory.txt | grep -o "[0-9]*$"`
+HEAP_VALUE=`grep ${INST_TYPE} server-memory.txt | grep -o "[0-9]*$"`
 
 if [[ $? -ne 0 ]]; then
-  XMX_OPT=""
+  HEAP_SIZE=""
 else
-  XMX_OPT="-J-Xmx${XMX_VALUE}g"
+  HEAP_SIZE="-heap-size=${HEAP_VALUE}g"
 fi
 
 # Configure snappydata cluster
-printf "localhost -jmx-manager=true -jmx-manager-start=true\n"  > ${SNAPPYDATA_DIR}/conf/locators
-printf "localhost -client-bind-address=${PUBLIC_HOSTNAME} -locators=localhost:10334 -client-port=1528 ${XMX_OPT}\n" > ${SNAPPYDATA_DIR}/conf/servers
+printf "localhost -client-bind-address=${PUBLIC_HOSTNAME} -J-Dgemfirexd.hostname-for-clients=${PUBLIC_HOSTNAME} \n"  > ${SNAPPYDATA_DIR}/conf/locators
+printf "localhost -locators=localhost:10334 -client-bind-address=${PUBLIC_HOSTNAME} -J-Dgemfirexd.hostname-for-clients=${PUBLIC_HOSTNAME} -client-port=1528 ${HEAP_SIZE}\n" > ${SNAPPYDATA_DIR}/conf/servers
 printf "localhost -locators=localhost:10334 -zeppelin.interpreter.enable=true \n" > ${SNAPPYDATA_DIR}/conf/leads
 printf "# `date` Configured SnappyData cluster $?\n" >> status.log
 
@@ -82,14 +68,14 @@ if [[ ! -e ${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ]]; then
   mkdir -p ${SNAPPY_INTERPRETER_DIR}
   printf "# `date` Created directory for Zeppelin SnappyData Interpreter $?\n" >> status.log
 
-  cp ${INTERPRETER_JAR_NAME} ${SNAPPYDATA_DIR}/jars/
-  printf "# `date` Copied interpreter jar to SnappyData jars dir $?\n" >> status.log
-
-  cp -a ${SNAPPYDATA_DIR}/jars/. ${SNAPPY_INTERPRETER_DIR}/
-  printf "# `date` Copied SnappyData jars to interpreter directory $?\n" >> status.log
+  ln -s ${SNAPPYDATA_DIR}/jars/* ${SNAPPY_INTERPRETER_DIR}/
+  printf "# `date` Created symlinks to SnappyData jars in interpreter directory $?\n" >> status.log
 
   mv ${INTERPRETER_JAR_NAME} ${SNAPPY_INTERPRETER_DIR}/
   printf "# `date` Moved interpreter jar to its dir $?\n" >> status.log
+
+  ln -s ${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ${SNAPPYDATA_DIR}/jars/
+  printf "# `date` Created symlink for interpreter jar in SnappyData jars dir $?\n" >> status.log
 fi
 
 # Start the single node snappydata cluster
@@ -102,22 +88,14 @@ if [[ ${RUNNING} -ne 3 ]]; then
   exit 1
 fi
 
+# Set default homescreen page in Apache Zeppelin
+sed -i "/<name>zeppelin.notebook.homescreen<\/name>/{n;s/<value>/<value>${HOMESCREEN}/}" ${ZEPPELIN_DIR}/conf/zeppelin-site.xml
+
 # Start Apache Zeppelin server
 bash ${ZEPPELIN_DIR}/bin/zeppelin-daemon.sh start
 CLUSTER_STARTED=`echo $?`
 
 printf "# `date` Started Zeppelin server ${CLUSTER_STARTED}\n" >> status.log
-
-# Check if we need to shutdown the instance after some time.
-wget http://169.254.169.254/latest/dynamic/instance-identity/document
-grep 605015649645 document
-if [[ $? -eq 0 ]]; then
-  grep jags-snappy-key /root/.ssh/authorized_keys
-  if [[ $? -ne 0 ]]; then
-    shutdown -h 120 "If you want to continue using this instance, kill the shutdown process." &
-    printf "# `date` Shutting down this instance in 120 minutes from now.\n" >> status.log
-  fi
-fi
 
 exit ${CLUSTER_STARTED}
 

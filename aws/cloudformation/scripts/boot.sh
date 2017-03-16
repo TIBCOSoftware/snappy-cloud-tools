@@ -1,10 +1,15 @@
 #!/bin/bash -x
 # Run as root
 
-printf "\n# `date` START -------------------------------------------------- #\n" >> status.log
+export HOMESCREEN=$1
+export DOWNLOADS_DIR=/snappydata
+export SNAPPYDATA_DIR=/opt/snappydata
+export ZEPPELIN_DIR=/opt/zeppelin
 
-mkdir -p /snappydata/downloads
-cd /snappydata/downloads
+mkdir -p ${DOWNLOADS_DIR}
+cd ${DOWNLOADS_DIR}
+
+printf "\n# `date` START -------------------------------------------------- #\n" >> status.log
 
 # Install CloudFormation helper scripts
 which cfn-signal
@@ -17,14 +22,13 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Update the urls for various artifacts and scripts.
-printf "https://github.com/SnappyDataInc/snappy-poc/releases/download/0.6-cf/snappydata-0.6.1-SNAPSHOT-bin.tar.gz" > snappydata-url.txt
-printf "https://github.com/SnappyDataInc/snappy-poc/releases/download/0.6-cf/snappydata-zeppelin-0.6.1-SNAPSHOT.jar" > interpreter-url.txt
-printf "https://github.com/SnappyDataInc/zeppelin-interpreter/raw/notes/examples/notebook/notebook.tar.gz" > notebook-url.txt
-printf "https://github.com/SnappyDataInc/snappy-cloud-tools/raw/master/aws/cloudformation/scripts/setup.sh" > cf-script-url.txt
+export SNAPPYDATA_URL="https://github.com/SnappyDataInc/snappydata/releases/download/v0.8/snappydata-0.8-bin.tar.gz"
+export INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.7.0/snappydata-zeppelin-0.7.0.jar"
+export NOTEBOOK_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/raw/notes/examples/notebook/notebook.tar.gz"
+export CF_SCRIPT_URL="https://github.com/SnappyDataInc/snappy-cloud-tools/raw/master/aws/cloudformation/scripts/setup.sh"
 printf "# `date` Updated urls $?\n" >> status.log
 
 rm setup.sh
-CF_SCRIPT_URL=`cat cf-script-url.txt`
 wget ${CF_SCRIPT_URL}
 printf "# `date` Downloaded cloudformation setup script $?\n" >> status.log
 
