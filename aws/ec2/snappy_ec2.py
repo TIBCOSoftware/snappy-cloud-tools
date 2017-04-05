@@ -194,9 +194,9 @@ def parse_args():
     parser.add_option(
         "-a", "--ami",
         help="Amazon Machine Image ID to use")
-    parser.add_option(
-        "-v", "--snappydata-version", default=DEFAULT_SNAPPY_VERSION,
-        help="Version of SnappyData to use: 'X.Y.Z' (default: %default)")
+#    parser.add_option(
+#        "-v", "--snappydata-version", default=DEFAULT_SNAPPY_VERSION,
+#        help="Version of SnappyData to use: 'X.Y.Z' (default: %default)")
     parser.add_option(
         "--with-zeppelin", default=None,
         help="Launch Apache Zeppelin server with the cluster." + 
@@ -504,8 +504,6 @@ def launch_cluster(conn, opts, cluster_name):
         locator_group.authorize('tcp', 8088, 8088, authorized_address)
         # SnappyData netserver uses this port to listen to clients by default
         locator_group.authorize('tcp', 1527, 1527, authorized_address)
-        # Port used by Pulse UI
-        locator_group.authorize('tcp', 7070, 7070, authorized_address)
         # JMX manager port
         locator_group.authorize('tcp', 1099, 1099, authorized_address)
         # Default locator port for peer discovery
@@ -1272,7 +1270,7 @@ def deploy_files(conn, root_dir, opts, locator_nodes, lead_nodes, server_nodes, 
                                 text = text.replace("{{LEAD_" + str(idx) + "}}", lead_addresses[idx])
                             for idx in range(len(server_nodes)):
                                 text = text.replace("{{SERVER_" + str(idx) + "}}", server_addresses[idx])
-                            text = text.replace("{{snappydata_version}}", opts.snappydata_version)
+                            text = text.replace("{{snappydata_version}}", "LATEST")
                             text = text.replace("{{EMBEDDED}}", zp_mode)
                             dest.write(text)
                             dest.close()

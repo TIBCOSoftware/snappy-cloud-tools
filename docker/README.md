@@ -36,7 +36,7 @@ Before you begin, ensure that:
  Run the following command to start SnappyData Cluster on Mac OS:
 
  ```
- docker run -d --name=snappydata -p 4040:4040 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata start all -J-Dgemfirexd.hostname-for-clients=<Machine_IP/Public_IP>
+ docker run -d --name=snappydata -p 5050:5050 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata start all -J-Dgemfirexd.hostname-for-clients=<Machine_IP/Public_IP>
  ```
  The `-J-Dgemfirexd.hostname-for-clients` parameter sets the IP Address or Host name that this server listens on for client connections.
 
@@ -116,7 +116,7 @@ Before you begin, ensure that:
 
 <hr>
 
-##Using Multiple Containers with Docker Compose
+## Using Multiple Containers with Docker Compose
 
 Download and install the latest version of Docker compose. Refer to the [Docker documentation](https://docs.docker.com/compose/install/) for more information.
 
@@ -153,7 +153,7 @@ $ docker-compose ps
  --------------------------------------------------------------------------------------------------------
  locator1       start locator                    Up      0.0.0.0:10334->10334/tcp, 0.0.0.0:1527->1527/tcp 
  server1        bash -c sleep 10 && start  ...   Up      0.0.0.0:1528->1528/tcp                           
- snappy_lead1   bash -c sleep 20 && start  ...   Up      0.0.0.0:4040->4040/tcp                           
+ snappy_lead1   bash -c sleep 20 && start  ...   Up      0.0.0.0:5050->5050/tcp                           
 
  ```
 
@@ -193,7 +193,7 @@ $ docker-compose ps
  SnappyData version 0.8
  snappy>
  ```
-  Note: You can also connect to SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client using the **snappydata-store-client-1.5.0.jar** file available on the official [SnappyData Release page](#https://github.com/SnappyDataInc/snappydata/releases). Refer to the documentation provided by your client tool for instructions on how to make a JDBC connection.
+  Note: If you want to connect to SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client,  the jar **snappydata-store-client-1.5.4.jar** file available on the official [SnappyData Release page](#https://github.com/SnappyDataInc/snappydata/releases). Refer to the documentation provided by your client tool for instructions on how to make a JDBC connection.
  
 6. **Make a JDBC connection**
 
@@ -203,7 +203,7 @@ $ docker-compose ps
  snappy>
  ```
  
-7. ** List Members**
+7. **List Members**
 
  ```
  snappy> show members;
@@ -244,13 +244,13 @@ $ docker-compose ps
 
 <hr>
 
-##Run SnappyData on Docker Cloud
+## Run SnappyData on Docker Cloud
 
 Docker Cloud is Docker's official platform for building, managing and deploying Docker containers across a variety of Cloud providers. It also provides features ideal for development workflows.
 
 To connect to the Cloud providers like AWS, AZURE and Digital Ocean refer to the official [Docker documentation](https://docs.docker.com/docker-cloud/infrastructure/link-aws/).
 
-###Connect to Cloud Hosting Provider
+### Connect to Cloud Hosting Provider
 
 Using Docker Cloud, connect to a cloud hosting provider of your choice. Currently, Amazon Web Services, Digital Ocean, Microsoft Azure, Softlayer and Packet and BYOH (bring your own host) are supported.
 
@@ -304,7 +304,7 @@ Using Docker Cloud, connect to a cloud hosting provider of your choice. Currentl
  SnappyData version 0.8
  snappy>
  ```
-  Note: You can also connect to SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client using the **snappydata-store-client-1.5.0.jar** file available on the official [SnappyData Release page](#https://github.com/SnappyDataInc/snappydata/releases). Refer to the documentation provided by your client tool for instructions on how to make a JDBC connection.
+  Note: You can also connect to SnappyData with DB client tools like dbSchema, DBVisualizer or Squirrel SQL client using the **snappydata-store-client-1.5.4.jar** file available on the official [SnappyData Release page](#https://github.com/SnappyDataInc/snappydata/releases). Refer to the documentation provided by your client tool for instructions on how to make a JDBC connection.
  
 5. **Make a JDBC connection**
 
@@ -328,11 +328,11 @@ Using Docker Cloud, connect to a cloud hosting provider of your choice. Currentl
 *
 <hr>
 
-##SnappyData With Docker Swarm
+## SnappyData With Docker Swarm
 
 This article explains how to setup multi-host SnappyData cluster using Docker Swarm, Docker Machine and Docker Compose.
 
-###Prerequisites
+### Prerequisites
 Before you begin, make sure you have a system on your network with the latest version of Docker Engine, Docker Machine and Docker Compose installed. The example also relies on VirtualBox. If you are using Mac or Windows with Docker Toolbox, you have all of these installed already.
 
 **Step 1: Set up a key-value store**
@@ -516,7 +516,7 @@ From this information, you can see that you are running 3 nodes running on Swarm
       depends_on:
        - "server1"
       ports:
-       - "4040:4040"
+       - "5050:5050"
  ```
 
  b. Run the Docker-compose with **docker-compose.yml** file
@@ -535,15 +535,15 @@ From this information, you can see that you are running 3 nodes running on Swarm
  $ docker-compose ps
  Name                       Command               State                                             Ports
  -----------------------------------------------------------------------------------------------------------------------------------------------------------
- locator1_1       bash -c /opt/snappydata/sb ...   Up      10334/tcp, 192.168.99.105:1527->1527/tcp, 1528/tcp, 4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
- server1_1        bash -c sleep 10 && /opt/s ...   Up      10334/tcp, 192.168.99.106:1527->1527/tcp, 1528/tcp, 4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
- snappy-lead1_1   bash -c sleep 20 && /opt/s ...   Up      10334/tcp, 1527/tcp, 1528/tcp, 192.168.99.104:4040->4040/tcp, 7070/tcp, 7320/tcp, 8080/tcp
+ locator1_1       bash -c /opt/snappydata/sb ...   Up      10334/tcp, 192.168.99.105:1527->1527/tcp, 1528/tcp, 5050/tcp, 7320/tcp, 8080/tcp
+ server1_1        bash -c sleep 10 && /opt/s ...   Up      10334/tcp, 192.168.99.106:1527->1527/tcp, 1528/tcp, 5050/tcp, 7320/tcp, 8080/tcp
+ snappy-lead1_1   bash -c sleep 20 && /opt/s ...   Up      10334/tcp, 1527/tcp, 1528/tcp, 192.168.99.104:5050->5050/tcp, 7320/tcp, 8080/tcp
  ```
  Within few seconds cluster is started.
 
 <hr>
 
-##Using Kubernetes
+## Using Kubernetes
 
 Kubernetes is a container orchestration platform that you can use to manage and scale your running containers across multiple instances or within a hybrid-cloud environment
 
@@ -604,9 +604,9 @@ $ kubectl get services
 NAME                        CLUSTER-IP       EXTERNAL-IP       PORT(S)                                                   AGE
 kubernetes                  10.127.240.1     <none>            443/TCP                                                   29m
 snappydata-leader           None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-leader-public    10.127.246.173   <pending>         4040/TCP                                                  3m
+snappydata-leader-public    10.127.246.173   <pending>         5050/TCP                                                  3m
 snappydata-locator          None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-locator-public   10.127.252.128   <pending>         1527/TCP,10334/TCP,7070/TCP                               3m
+snappydata-locator-public   10.127.252.128   <pending>         1527/TCP,10334/TCP,                                       3m
 snappydata-server           None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
 snappydata-server-public    10.127.244.246   <pending>         1527/TCP,10334/TCP                                        3m
 ```
@@ -632,9 +632,6 @@ spec:
   - port: 10334
     targetPort: 10334
     name: locator
-  - port: 7070
-    targetPort: 7070
-    name: pulse
   type: LoadBalancer
   selector:
     app: snappydata-locator
@@ -643,7 +640,7 @@ spec:
 
 **Troubleshooting**
 
-If you are having trouble bringing up SnappyData Services, double check that your external IP is properly defined for your frontend Service, and that the firewall for your cluster nodes is open to port `1527, 10334, 8080, 4040, 7070` .
+If you are having trouble bringing up SnappyData Services, double check that your external IP is properly defined for your frontend Service, and that the firewall for your cluster nodes is open to port `1527, 10334, 8080, 5050` .
 
 **Accessing the SnappyData externally**
 
@@ -657,9 +654,9 @@ $ kubectl get services
 NAME                        CLUSTER-IP       EXTERNAL-IP       PORT(S)                                                   AGE
 kubernetes                  10.127.240.1     <none>            443/TCP                                                   29m
 snappydata-leader           None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-leader-public    10.127.246.173   130.211.155.29    4040/TCP                                                  3m
+snappydata-leader-public    10.127.246.173   130.211.155.29    5050/TCP                                                  3m
 snappydata-locator          None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-locator-public   10.127.252.128   104.198.247.10    1527/TCP,10334/TCP,7070/TCP                               3m
+snappydata-locator-public   10.127.252.128   104.198.247.10    1527/TCP,10334/TCP,                                       3m
 snappydata-server           None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
 snappydata-server-public    10.127.244.246   104.154.247.255   1527/TCP,10334/TCP                                        3m
 ```

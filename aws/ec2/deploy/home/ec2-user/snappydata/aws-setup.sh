@@ -20,8 +20,8 @@
 pushd /home/ec2-user/snappydata > /dev/null
 
 source ec2-variables.sh
-
-sh resolve-hostname.sh
+sudo yum -y -q remove  jre-1.7.0-openjdk
+sudo yum -y -q install java-1.8.0-openjdk-devel
 
 # Download and extract the appropriate distribution.
 sh fetch-distribution.sh
@@ -50,6 +50,8 @@ fi
 
 # Enable jmx-manager for pulse to start
 sed -i '/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/$/ -jmx-manager=true -jmx-manager-start=true/}}' "${SNAPPY_HOME_DIR}/conf/locators"
+# Configure hostname-for-clients
+sed -i '/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/\([^ ]*\)\(.*\)$/\1\2 -J-Dgemfirexd.hostname-for-clients=\1/}}' "${SNAPPY_HOME_DIR}/conf/locators"
 
 
 if [[ -e leads ]]; then
@@ -64,8 +66,8 @@ if [[ "${ZEPPELIN_HOST}" != "zeppelin_server" ]]; then
 
   # Add interpreter jar to snappydata's jars directory
   # TODO Download this from official-github-release. See fetch-distribution.sh:getLatestUrl() on how we can get the latest url.
-  INTERPRETER_JAR="snappydata-zeppelin-0.6.1.jar"
-  INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.6.1/${INTERPRETER_JAR}"
+  INTERPRETER_JAR="snappydata-zeppelin-0.7.1.jar"
+  INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.7.1/${INTERPRETER_JAR}"
   wget -q "${INTERPRETER_URL}"
   mv ${INTERPRETER_JAR} ${SNAPPY_HOME_DIR}/jars/
 fi
@@ -76,31 +78,35 @@ else
   cp server_list "${SNAPPY_HOME_DIR}/conf/servers"
 fi
 
+# Configure hostname-for-clients
+sed -i '/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/\([^ ]*\)\(.*\)$/\1\2 -J-Dgemfirexd.hostname-for-clients=\1/}}' "${SNAPPY_HOME_DIR}/conf/servers"
+
+
 OTHER_LOCATORS=`cat locator_list | sed '1d'`
 echo "$OTHER_LOCATORS" > other-locators
 
 # Copy this extracted directory to all the other instances
 sh copy-dir.sh "${SNAPPY_HOME_DIR}"  other-locators
-sh copy-dir.sh resolve-hostname.sh  other-locators
 
 sh copy-dir.sh "${SNAPPY_HOME_DIR}"  lead_list
-sh copy-dir.sh resolve-hostname.sh  lead_list
 
 sh copy-dir.sh "${SNAPPY_HOME_DIR}"  server_list
-sh copy-dir.sh resolve-hostname.sh  server_list
 
-DIR=`readlink -f resolve-hostname.sh`
+DIR=`readlink -f zeppelin-setup.sh`
 DIR=`echo "$DIR"|sed 's@/$@@'`
 DIR=`dirname "$DIR"`
 
 for node in ${OTHER_LOCATORS}; do
-    ssh "$node" "sh ${DIR}/resolve-hostname.sh"
+    ssh "$node" "sudo yum -y -q remove jre-1.7.0-openjdk"
+    ssh "$node" "sudo yum -y -q install java-1.8.0-openjdk-devel"
 done
 for node in ${LEADS}; do
-    ssh "$node" "sh ${DIR}/resolve-hostname.sh"
+    ssh "$node" "sudo yum -y -q remove jre-1.7.0-openjdk"
+    ssh "$node" "sudo yum -y -q install java-1.8.0-openjdk-devel"
 done
 for node in ${SERVERS}; do
-    ssh "$node" "sh ${DIR}/resolve-hostname.sh"
+    ssh "$node" "sudo yum -y -q remove jre-1.7.0-openjdk"
+    ssh "$node" "sudo yum -y -q install java-1.8.0-openjdk-devel"
 done
 
 # Launch the SnappyData cluster

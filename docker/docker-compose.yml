@@ -31,8 +31,8 @@ services:
      depends_on:
        - "server1"
      ports:
-       - "4040:4040"
+       - "5050:5050"
      networks:
-       - snappydata  
+       - snappydata      
 networks:
   snappydata:

@@ -26,6 +26,6 @@ snappy-lead1:
   links:
     - server1
   ports:
-    - '4040:4040'
+    - '5050:5050'
   sequential_deployment: true
   working_dir: /opt/snappydata/

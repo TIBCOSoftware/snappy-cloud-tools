@@ -28,8 +28,8 @@ which jar > /dev/null
 JAR_STATUS=`echo $?`
 
 if [[ ${JAR_STATUS} -ne 0 ]]; then
-  echo "Installing openjdk 1.7 ..."
-  sudo yum -y install java-1.7.0-openjdk-devel
+  echo "Installing openjdk 1.8 ..."
+  sudo yum -y -q install java-1.8.0-openjdk-devel
 fi
 
 echo "${LOCATORS}" > locator_list
@@ -37,9 +37,9 @@ FIRST_LOCATOR=`cat locator_list | sed -n '1p'`
 echo "${LEADS}" > lead_list
 FIRST_LEAD=`cat lead_list | sed -n '1p'`
 
-ZEP_DIR="zeppelin-0.6.1-bin-netinst"
-# ZEP_URL="http://mirror.fibergrid.in/apache/zeppelin/zeppelin-0.6.1/${ZEP_DIR}.tgz"
-ZEP_URL_MIRROR="http://redrockdigimark.com/apachemirror/zeppelin/zeppelin-0.6.1/${ZEP_DIR}.tgz"
+ZEP_DIR="zeppelin-0.7.0-bin-netinst"
+# ZEP_URL="http://mirror.fibergrid.in/apache/zeppelin/zeppelin-0.7.0/${ZEP_DIR}.tgz"
+ZEP_URL_MIRROR="http://redrockdigimark.com/apachemirror/zeppelin/zeppelin-0.7.0/${ZEP_DIR}.tgz"
 ZEP_NOTEBOOKS_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/raw/notes/examples/notebook"
 ZEP_NOTEBOOKS_DIR="notebook"
 
@@ -66,8 +66,7 @@ if [[ ! -e "${ZEP_NOTEBOOKS_DIR}.tar.gz" ]]; then
 fi
 tar -xzf "${ZEP_NOTEBOOKS_DIR}.tar.gz"
 
-find ${ZEP_NOTEBOOKS_DIR} -type f -print0 | xargs -0 sed -i "s/localhost:4040/${FIRST_LEAD}:4040/g"
-find ${ZEP_NOTEBOOKS_DIR} -type f -print0 | xargs -0 sed -i "s/localhost:7070/${FIRST_LOCATOR}:7070/g"
+find ${ZEP_NOTEBOOKS_DIR} -type f -print0 | xargs -0 sed -i "s/localhost:5050/${FIRST_LEAD}:5050/g"
 
 echo "Copying sample notebooks..."
 cp -ar "${ZEP_NOTEBOOKS_DIR}/." "${ZEP_DIR}/${ZEP_NOTEBOOKS_DIR}/"
@@ -79,8 +78,8 @@ fi
 
 # Download, extract and place SnappyData interpreter under interpreter/ directory
 # TODO See fetch-distribution.sh:getLatestUrl() on how we can get the latest url.
-INTERPRETER_JAR="snappydata-zeppelin-0.6.1.jar"
-INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.6.1/${INTERPRETER_JAR}"
+INTERPRETER_JAR="snappydata-zeppelin-0.7.1.jar"
+INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.7.1/${INTERPRETER_JAR}"
 INTERPRETER_DIR="${ZEP_DIR}/interpreter/snappydata"
 
 if [[ ! -d ${INTERPRETER_DIR} ]] || [[ ! -e interpreter-setting.json.orig ]]; then
@@ -142,7 +141,11 @@ else
   # TODO If user has made any changes to the interpreter config, those may be lost.
   # Start and stop the Zeppelin daemon
   sh "${ZEP_DIR}/bin/zeppelin-daemon.sh" start
-  sleep 2
+   echo "Configuring Snappydata Interpreter..."
+   while ! test -f  "${ZEP_DIR}/conf/interpreter.json" ; do
+      sleep 3
+   done
+  cp "${ZEP_DIR}/conf/interpreter.json" "${ZEP_DIR}/conf/interpreter.json.orig"
   sh "${ZEP_DIR}/bin/zeppelin-daemon.sh" stop
   if [[ ! -e "${ZEP_DIR}/conf/interpreter.json" ]]; then
     echo "The file interpreter.json was not generated."
@@ -159,13 +162,13 @@ if [[ -e "${ZEP_DIR}/conf/interpreter.json" ]]; then
     echo "${LEADS}" > lead_list
     LEAD_HOST=`cat lead_list | sed -n '1p'`
   fi
-  sed -i "/group\": \"snappydata\"/,/isExistingProcess\": false/{s/isExistingProcess\": false/isExistingProcess\": snappydatainc_marker,/}" "${ZEP_DIR}/conf/interpreter.json"
-  sed -i "/snappydatainc_marker/a \"host\": \"${LEAD_HOST}\",\n\
-         \"port\": \"${LEAD_PORT}\"" "${ZEP_DIR}/conf/interpreter.json"
+  sed -i "/group\": \"snappydata\"/,/isExistingProcess\": false/{s/isExistingProcess\": false/isExistingProcess\": snappydatainc_marker/}" "${ZEP_DIR}/conf/interpreter.json"
+  sed -i "/snappydatainc_marker/a \"host\": \"${LEAD_HOST}\",\n \"port\": \"${LEAD_PORT}\"," "${ZEP_DIR}/conf/interpreter.json"
   sed -i "s/snappydatainc_marker/true/" "${ZEP_DIR}/conf/interpreter.json"
 fi
 
 sh "${ZEP_DIR}/bin/zeppelin-daemon.sh" start
+
 sleep 3
 
 popd > /dev/null
