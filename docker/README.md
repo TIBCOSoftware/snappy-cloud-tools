@@ -7,7 +7,7 @@
 * [Using Kubernetes](#using-kubernetes)
 
 ## Setting up Cluster with SnappyData Docker Image
-###Prerequisites
+### Prerequisites
 
 Before you begin, ensure that:
 * You have Docker installed, configured and it runs successfully on your machine. Refer to the [Docker documentation](http://docs.docker.com/installation) for more information on installing Docker.
