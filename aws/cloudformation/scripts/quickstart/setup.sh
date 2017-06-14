@@ -41,6 +41,7 @@ printf "# `date` Extracted notebook $?\n" >> status.log
 
 # Copy the notebook to Zeppelin and update the local hostname.
 rm -rf ${ZEPPELIN_DIR}/notebook/*
+mkdir -p ${ZEPPELIN_DIR}/notebook
 cp -R notebook/* ${ZEPPELIN_DIR}/notebook/
 find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${PUBLIC_HOSTNAME}/g"
 
@@ -89,7 +90,9 @@ if [[ ${RUNNING} -ne 3 ]]; then
 fi
 
 # Set default homescreen page in Apache Zeppelin
-sed -i "/<name>zeppelin.notebook.homescreen<\/name>/{n;s/<value>/<value>${HOMESCREEN}/}" ${ZEPPELIN_DIR}/conf/zeppelin-site.xml
+# sed -i "/<name>zeppelin.notebook.homescreen<\/name>/{n;s/<value>/<value>${HOMESCREEN}/}" ${ZEPPELIN_DIR}/conf/zeppelin-site.xml
+# A bug in 0.9 AMI
+sed -i "/<name>zeppelin.notebook.homescreen<\/name>/{n;s/<value>snappydatasnappydata/<value>${HOMESCREEN}/}" ${ZEPPELIN_DIR}/conf/zeppelin-site.xml
 
 # Start Apache Zeppelin server
 bash ${ZEPPELIN_DIR}/bin/zeppelin-daemon.sh start

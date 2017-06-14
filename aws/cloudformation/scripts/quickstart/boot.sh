@@ -22,7 +22,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Update the urls for various artifacts and scripts.
-export SNAPPYDATA_URL="https://github.com/SnappyDataInc/snappydata/releases/download/v0.8/snappydata-0.8-bin.tar.gz"
+export SNAPPYDATA_URL="https://github.com/SnappyDataInc/snappydata/releases/download/v0.9/snappydata-0.9-bin.tar.gz"
 export INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.7.0/snappydata-zeppelin-0.7.0.jar"
 export NOTEBOOK_URL="https://s3-us-west-2.amazonaws.com/zeppelindemo/quickstart/notebook.tar.gz"
 export CF_SCRIPT_URL="https://github.com/SnappyDataInc/snappy-cloud-tools/raw/master/aws/cloudformation/scripts/quickstart/setup.sh"
