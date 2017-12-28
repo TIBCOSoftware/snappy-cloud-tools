@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Changes for SnappyData data platform.
+#
+# Portions Copyright (c) 2017 SnappyData, Inc. All rights reserved.
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -24,7 +27,6 @@ export LOCATORS="{{locator_list}}"
 export LEADS="{{lead_list}}"
 export SERVERS="{{server_list}}"
 export ZEPPELIN_HOST="{{zeppelin_server}}"
-export ZEPPELIN_MODE="{{EMBEDDED}}"
 export SNAPPYDATA_VERSION="{{snappydata_version}}"
 export AWS_ACCESS_KEY_ID="{{aws_access_key_id}}"
 export AWS_SECRET_ACCESS_KEY="{{aws_secret_access_key}}"

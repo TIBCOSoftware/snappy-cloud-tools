@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
-
 #
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
+# Copyright (c) 2017 SnappyData, Inc. All rights reserved.
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+# Licensed under the Apache License, Version 2.0 (the "License"); you
+# may not use this file except in compliance with the License. You
+# may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License. See accompanying
+# LICENSE file.
 #
 
 # TODO Remove the hardcoding wherever possible.
@@ -37,22 +36,25 @@ FIRST_LOCATOR=`cat locator_list | sed -n '1p'`
 echo "${LEADS}" > lead_list
 FIRST_LEAD=`cat lead_list | sed -n '1p'`
 
-ZEP_DIR="zeppelin-0.7.0-bin-netinst"
-# ZEP_URL="http://mirror.fibergrid.in/apache/zeppelin/zeppelin-0.7.0/${ZEP_DIR}.tgz"
-ZEP_URL_MIRROR="http://redrockdigimark.com/apachemirror/zeppelin/zeppelin-0.7.0/${ZEP_DIR}.tgz"
+ZEP_VERSION="0.7.3"
+INTERPRETER_VERSION="0.7.2"
+ZEP_DIR="zeppelin-${ZEP_VERSION}-bin-netinst"
+ZEP_URL_MIRROR="http://www-us.apache.org/dist/zeppelin/zeppelin-${ZEP_VERSION}/${ZEP_DIR}.tgz"
+ZEP_ALT_URL="http://www-eu.apache.org/dist/zeppelin/zeppelin-${ZEP_VERSION}/${ZEP_DIR}.tgz"
 ZEP_NOTEBOOKS_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/raw/notes/examples/notebook"
 ZEP_NOTEBOOKS_DIR="notebook"
+PUBLIC_HOSTNAME=`wget -q -O - http://169.254.169.254/latest/meta-data/public-hostname`
 
 # Download and extract Zeppelin distribution
 if [[ ! -d ${ZEP_DIR} ]]; then
   if [[ ! -e "${ZEP_DIR}.tgz" ]]; then
     echo "Downloading Apache Zeppelin distribution..."
     wget -q "${ZEP_URL_MIRROR}"
-    # Try the same mirror again. Zeppelin website has removed fibergrid mirror.
     # TODO while loop
     if [ $? -ne 0 ]; then
+      # Try different mirror.
       rm "${ZEP_DIR}.tgz"
-      wget -q "${ZEP_URL_MIRROR}"
+      wget -q "${ZEP_ALT_URL}"
     fi
     
   fi
@@ -66,7 +68,7 @@ if [[ ! -e "${ZEP_NOTEBOOKS_DIR}.tar.gz" ]]; then
 fi
 tar -xzf "${ZEP_NOTEBOOKS_DIR}.tar.gz"
 
-find ${ZEP_NOTEBOOKS_DIR} -type f -print0 | xargs -0 sed -i "s/localhost:5050/${FIRST_LEAD}:5050/g"
+find ${ZEP_NOTEBOOKS_DIR} -type f -print0 | xargs -0 sed -i "s/localhost/${PUBLIC_HOSTNAME}/g"
 
 echo "Copying sample notebooks..."
 cp -ar "${ZEP_NOTEBOOKS_DIR}/." "${ZEP_DIR}/${ZEP_NOTEBOOKS_DIR}/"
@@ -77,9 +79,8 @@ if [[ ! -d ${SNAPPY_HOME_DIR} ]]; then
 fi
 
 # Download, extract and place SnappyData interpreter under interpreter/ directory
-# TODO See fetch-distribution.sh:getLatestUrl() on how we can get the latest url.
-INTERPRETER_JAR="snappydata-zeppelin-0.7.1.jar"
-INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.7.1/${INTERPRETER_JAR}"
+INTERPRETER_JAR="snappydata-zeppelin-${INTERPRETER_VERSION}.jar"
+INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v${INTERPRETER_VERSION}/${INTERPRETER_JAR}"
 INTERPRETER_DIR="${ZEP_DIR}/interpreter/snappydata"
 
 if [[ ! -d ${INTERPRETER_DIR} ]] || [[ ! -e interpreter-setting.json.orig ]]; then
@@ -158,10 +159,6 @@ fi
 if [[ -e "${ZEP_DIR}/conf/interpreter.json" ]]; then
   LEAD_HOST="localhost"
   LEAD_PORT="3768"
-  if [[ ${ZEPPELIN_MODE} != "EMBEDDED" ]]; then
-    echo "${LEADS}" > lead_list
-    LEAD_HOST=`cat lead_list | sed -n '1p'`
-  fi
   sed -i "/group\": \"snappydata\"/,/isExistingProcess\": false/{s/isExistingProcess\": false/isExistingProcess\": snappydatainc_marker/}" "${ZEP_DIR}/conf/interpreter.json"
   sed -i "/snappydatainc_marker/a \"host\": \"${LEAD_HOST}\",\n \"port\": \"${LEAD_PORT}\"," "${ZEP_DIR}/conf/interpreter.json"
   sed -i "s/snappydatainc_marker/true/" "${ZEP_DIR}/conf/interpreter.json"
@@ -169,6 +166,6 @@ fi
 
 sh "${ZEP_DIR}/bin/zeppelin-daemon.sh" start
 
-sleep 3
+# sleep 3
 
 popd > /dev/null

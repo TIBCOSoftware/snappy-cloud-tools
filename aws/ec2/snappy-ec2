@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Changes for SnappyData data platform.
+#
+# Portions Copyright (c) 2017 SnappyData, Inc. All rights reserved.
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,7 +21,7 @@
 # limitations under the License.
 #
 
-# This script is taken from 
+# This script was taken from
 # https://github.com/amplab/spark-ec2/blob/branch-1.6/spark-ec2
 # with modifications.
 
