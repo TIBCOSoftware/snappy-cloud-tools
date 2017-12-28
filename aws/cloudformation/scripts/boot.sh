@@ -44,7 +44,7 @@ sudo yum -y update
 export SNAPPYDATA_URL="https://github.com/SnappyDataInc/snappydata/releases/download/v1.0.0/snappydata-1.0.0-bin.tar.gz"
 export INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.7.2/snappydata-zeppelin-0.7.2.jar"
 export NOTEBOOK_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/raw/notes/examples/notebook/notebook.tar.gz"
-export CF_SCRIPT_URL="https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/test-01/aws/cloudformation/scripts/setup.sh"
+export CF_SCRIPT_URL="https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/aws/cloudformation/scripts/setup.sh"
 printf "# `date` Updated urls $?\n" >> status.log
 
 rm -f setup.sh
