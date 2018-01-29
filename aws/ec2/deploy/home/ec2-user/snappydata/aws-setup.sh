@@ -95,6 +95,13 @@ fi
 # Configure hostname-for-clients
 sed -i '/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/\([^ ]*\)\(.*\)$/\1\2 -hostname-for-clients=\1/}}' "${SNAPPY_HOME_DIR}/conf/servers"
 
+# Set SPARK_DNS_HOST to public hostname of first lead so that SnappyData Pulse UI links work fine.
+SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+for node in ${LEADS}; do
+    export LEAD_DNS_NAME=`ssh $SSH_OPTS "$node" "wget -q -O - http://169.254.169.254/latest/meta-data/public-hostname"`
+    break
+done
+echo "SPARK_PUBLIC_DNS=${LEAD_DNS_NAME}" >> ${SNAPPY_HOME_DIR}/conf/spark-env.sh
 
 OTHER_LOCATORS=`cat locator_list | sed '1d'`
 echo "$OTHER_LOCATORS" > other-locators
