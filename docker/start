@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#
+# Copyright (c) 2018 SnappyData, Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you
+# may not use this file except in compliance with the License. You
+# may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License. See accompanying
+# LICENSE file.
+#
+
+cat /etc/passwd > /tmp/passwd
+echo "$(id -u):x:$(id -u):$(id -g):dynamic uid:/opt/snappydata:/bin/false" >> /tmp/passwd
+
+export NSS_WRAPPER_PASSWD=/tmp/passwd
+export NSS_WRAPPER_GROUP=/etc/group
+export LD_PRELOAD=/usr/lib64/libnss_wrapper.so
+
+echo "starting sshd service"
+service sshd start
+
+HOSTNAME=`hostname`
+
+IP=`ping -c 1 $HOSTNAME | grep "64 bytes from"|awk '{print $5}' | awk -F"(" '{print $2}' | awk -F")" '{print $1}'`
+sbin=/opt/snappydata/sbin
+die() { echo "ERROR: $*" 1>&2; exit 1; }
+
+
+
+case "$1" in
+   "")
+      echo "Usage: start [server|lead|locator|all]"
+      exit 1
+      ;;
+   server)
+      echo $IP > /opt/snappydata/conf/servers
+      $sbin/snappy-servers.sh start "${@:2}"
+      ;;
+   locator)
+      echo $IP > /opt/snappydata/conf/locators
+      sbin/snappy-locators.sh start "${@:2}"
+      ;;
+   lead)
+      echo $IP > /opt/snappydata/conf/leads
+      $sbin/snappy-leads.sh start "${@:2}"
+      ;;
+   all)
+      $sbin/snappy-start-all.sh -client-bind-address=0.0.0.0 -prefer-netserver-ipaddress=true "${@:2}"
+      ;;
+   * )
+   echo "Usage: start [server|lead|locator|all]"
+   die "Invalid Argument"
+esac
+
+
+tail -f /dev/null
+
