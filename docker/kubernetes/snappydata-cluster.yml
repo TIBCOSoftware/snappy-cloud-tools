@@ -76,8 +76,10 @@ spec:
         image: snappydatainc/snappydata:1.0.0
         imagePullPolicy: IfNotPresent
         resources:
-        requests:
-          memory: "1024Mi"
+          limits:
+            memory: 1024Mi
+          requests:
+            memory: 512Mi
 #         cpu: "200m"
         ports:
         - containerPort: 10334
@@ -100,8 +102,8 @@ spec:
         - mountPath: "/opt/snappydata/work"
           name: snappy-disk-claim
 
-  terminationGracePeriodSeconds: 60
-  
+      terminationGracePeriodSeconds: 60
+
   volumeClaimTemplates:
   - metadata:
       name: snappy-disk-claim
@@ -111,6 +113,7 @@ spec:
         requests:
           storage: 10Gi
       storageClassName: standard
+
 # A PV claim using 'standard' storage class. Will work only in Google container engine. 
 # In other clouds, create a PV and assign storageClassName ...
 
@@ -159,7 +162,7 @@ spec:
         - mountPath: "/opt/snappydata/work"
           name: snappy-disk-claim
       terminationGracePeriodSeconds: 60
-  
+
   volumeClaimTemplates:
   - metadata:
       name: snappy-disk-claim
@@ -169,7 +172,7 @@ spec:
         requests:
           storage: 10Gi
       storageClassName: standard
-# A PV claim using 'standard' storage class. Will work only in Google container engine. 
+# A PV claim using 'standard' storage class. Will work only in Google container engine.
 # In other clouds, create a PV and assign storageClassName ...
 
 
@@ -216,7 +219,7 @@ spec:
         - mountPath: "/opt/snappydata/work"
           name: snappy-disk-claim
       terminationGracePeriodSeconds: 60
-  
+
   volumeClaimTemplates:
   - metadata:
       name: snappy-disk-claim
@@ -226,7 +229,7 @@ spec:
         requests:
           storage: 10Gi
       storageClassName: standard
-# A PV claim using 'standard' storage class. Will work only in Google container engine. 
+# A PV claim using 'standard' storage class. Will work only in Google container engine.
 # In other clouds, create a PV and assign storageClassName ...
 
 ---
