@@ -59,7 +59,7 @@ case "$1" in
       ;;
    lead)
       COUNTER=0;
-      while ! nc -z snappydata-server 1527 > /dev/null 2>&1; do
+      while ! nc -z snappydata-server-external 1527 > /dev/null 2>&1; do
         echo "Waiting for servers to be online"
         sleep 5
         let COUNTER=COUNTER+1
