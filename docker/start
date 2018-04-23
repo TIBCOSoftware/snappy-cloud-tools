@@ -59,7 +59,7 @@ case "$1" in
       ;;
    lead)
       COUNTER=0;
-      while ! nc -z snappydata-server 1527 > /dev/null 2>&1; do
+      while ! nc -z snappydata-server-public 1527 > /dev/null 2>&1; do
         echo "Waiting for servers to be online"
         sleep 5
         let COUNTER=COUNTER+1
@@ -70,7 +70,7 @@ case "$1" in
       done
       KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
       KUBE_CACERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-      KUBE_API_URL="https://kubernetes/api/v1/namespaces/default/services/snappydata-leader/status"
+      KUBE_API_URL="https://kubernetes/api/v1/namespaces/default/services/snappydata-ui/status"
       success=1
       while [ ${success} != 0 ]
       do
