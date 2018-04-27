@@ -37,9 +37,9 @@ die() { echo "ERROR: $*" 1>&2; exit 1; }
 getServiceIP() {
     KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
     KUBE_CACERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-    KUBE_API_URL="https://kubernetes/api/v1/namespaces/default/services/$1/status"
+    KUBE_API_URL="https://kubernetes/api/v1/namespaces/default/services/$1"
     SERVICE_IP=""
-    wget -O- -q --ca-certificate $KUBE_CACERT  --header "Authorization: Bearer $KUBE_TOKEN" ${KUBE_API_URL}
+    wget -O service -q --ca-certificate $KUBE_CACERT  --header "Authorization: Bearer $KUBE_TOKEN" ${KUBE_API_URL}
     if [ $? != 0 ]; then
       echo "ERROR: The service $1 is not found."
     else

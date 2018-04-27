@@ -14,9 +14,9 @@ RUN yum -y install nc wget; yum clean all -y
 RUN ssh-keygen -q -N "" -t rsa -f /root/.ssh/id_rsa
 RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 
-COPY jdk-8u131-linux-x64.rpm /opt/snappydata
-RUN rpm -ivh /opt/snappydata/jdk-8u131-linux-x64.rpm
-RUN rm -rf /opt/snappydata/jdk-8u131-linux-x64.rpm
+COPY jdk-8u172-linux-x64.rpm /opt/snappydata
+RUN rpm -ivh /opt/snappydata/jdk-8u172-linux-x64.rpm
+RUN rm -rf /opt/snappydata/jdk-8u172-linux-x64.rpm
 
 ENV JAVA_HOME /usr/java/default
 ENV PATH $PATH:$JAVA_HOME/bin
