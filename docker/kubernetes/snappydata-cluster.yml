@@ -54,7 +54,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: snappydata-ui
+  name: snappydata-leader
   labels:
     app: snappydata
 spec:
@@ -291,7 +291,7 @@ spec:
           - "/bin/bash"
           - "-c"
           - >
-            start lead --get-ip snappydata-ui --wait-for snappydata-server-public 1527 -locators=snappydata-locator-internal:10334 -zeppelin.interpreter.enable=true;
+            start lead --get-ip snappydata-leader --wait-for snappydata-server-public 1527 -locators=snappydata-locator-internal:10334 -zeppelin.interpreter.enable=true;
         lifecycle:
           preStop:
             exec:
