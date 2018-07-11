@@ -36,11 +36,11 @@ Before you begin, ensure that:
  Run the following command to start SnappyData Cluster on Mac OS:
 
  ```
- docker run -d --name=snappydata -p 5050:5050 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata start all -J-Dgemfirexd.hostname-for-clients=<Machine_IP/Public_IP>
+ docker run -d --name=snappydata -p 5050:5050 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata start all -hostname-for-clients=<Machine_IP/Public_IP>
  ```
- The `-J-Dgemfirexd.hostname-for-clients` parameter sets the IP Address or Host name that this server listens on for client connections.
+ The `-hostname-for-clients` parameter sets the IP Address or Host name that this server listens on for client connections. The command may take some time to complete execution.
 
- Note: It may take some time for this command to complete execution.
+ The Docker image of SnappyData is built using its Open Source (OSS) version. The image of its Enterprise version will be made available soon.
 
 3. **Check the Docker Process**
 
@@ -117,6 +117,8 @@ Before you begin, ensure that:
 <hr>
 
 ## Using Multiple Containers with Docker Compose
+
+**NOTE:** The latest Docker image has not been tested with Docker Compose. We recommend [using Helm charts to launch SnappyData cluster](https://github.com/SnappyDataInc/spark-on-k8s/tree/master/charts/snappydata) on Kubernetes.
 
 Download and install the latest version of Docker compose. Refer to the [Docker documentation](https://docs.docker.com/compose/install/) for more information.
 
@@ -245,6 +247,8 @@ $ docker-compose ps
 <hr>
 
 ## Run SnappyData on Docker Cloud
+
+**NOTE:** The latest Docker image has not been tested on Docker Cloud. We recommend [using Helm charts to launch SnappyData cluster](https://github.com/SnappyDataInc/spark-on-k8s/tree/master/charts/snappydata) on Kubernetes.
 
 Docker Cloud is Docker's official platform for building, managing and deploying Docker containers across a variety of Cloud providers. It also provides features ideal for development workflows.
 
@@ -544,150 +548,6 @@ From this information, you can see that you are running 3 nodes running on Swarm
 
 ## Using Kubernetes
 
-Kubernetes is a container orchestration platform that you can use to manage and scale your running containers across multiple instances or within a hybrid-cloud environment
+Kubernetes is a container orchestration platform that you can use to manage and scale your running containers across multiple instances or within a hybrid-cloud environment.
 
-
-**Prerequisites**
-
-This example requires a running Kubernetes cluster. First, check that kubectl is properly configured by getting the cluster state:
-
-```
-$ kubectl cluster-info
-```
-If you see a URL response, you are ready to go. If not, read the [Getting Started guides](http://kubernetes.io/docs/getting-started-guides/) for how to get started, and follow the [prerequisites](http://kubernetes.io/docs/user-guide/prereqs/) to install and configure kubectl. As noted above, if you have a Google Container Engine cluster set up, read [this example](https://cloud.google.com/container-engine/docs/tutorials/guestbook) instead.
-
-**Use a PetSet to create SnappyData Services**
-
-In Kubernetes, most pod management abstractions group them into disposable units of work that compose a microservice. Replication controllers, for example, are designed with a weak guarantee - that there should be N replicas of a particular pod template. The pods are treated as stateless units, if one of them is unhealthy or superseded by a newer version, the system just disposes it. [Please refer to the PetSet documentation.](http://kubernetes.io/docs/user-guide/petset/)
-
-Creates a SnappyData cluster that consists of three pods using [snappydata.yml](https://raw.githubusercontent.com/SnappyDataInc/snappy-cloud-tools/master/docker/kubernetes/snappydata.yml) PetSet.
-
-```
-$ kubectl create -f snappydata.yml
-service "snappydata-locator-public" created
-service "snappydata-server-public" created
-service "snappydata-leader-public" created
-service "snappydata-locator" created
-service "snappydata-server" created
-service "snappydata-leader" created
-petset "snappydata-locator" created
-petset "snappydata-server" created
-petset "snappydata-leader" created
-```
-
-List created pods by `snappydata.yml`
-
-```
-$ kubectl get pods
-NAME                   READY     STATUS    RESTARTS   AGE
-snappydata-leader-0    1/1       Running   0          2h
-snappydata-locator-0   1/1       Running   0          2h
-snappydata-server-0    1/1       Running   0          2h
-```
-
-Check logs of locator
-
-```
-$ kubectl logs snappydata-locator-0
-Starting sshd: [  OK  ]
-172.17.0.4: Warning: Permanently added '172.17.0.4' (RSA) to the list of known hosts.
-172.17.0.4: Starting SnappyData Locator using peer discovery on: 172.17.0.4[10334]
-172.17.0.4: Starting DRDA server for SnappyData at address /172.17.0.4[1527]
-172.17.0.4: Logs generated in /opt/snappydata/work/172.17.0.4-locator-1/snappylocator.log
-172.17.0.4: SnappyData Locator pid: 129 status: running
-```
-Then, list all your Services:
-
-```
-$ kubectl get services
-NAME                        CLUSTER-IP       EXTERNAL-IP       PORT(S)                                                   AGE
-kubernetes                  10.127.240.1     <none>            443/TCP                                                   29m
-snappydata-leader           None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-leader-public    10.127.246.173   <pending>         5050/TCP                                                  3m
-snappydata-locator          None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-locator-public   10.127.252.128   <pending>         1527/TCP,10334/TCP,                                       3m
-snappydata-server           None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-server-public    10.127.244.246   <pending>         1527/TCP,10334/TCP                                        3m
-```
-
-
-**Using 'type: LoadBalancer' for the frontend service (cloud-provider-specific)**
-
-For supported cloud providers, such as Google Compute Engine or Google Container Engine, you can specify to use an external load balancer in the service spec, to expose the service onto an external load balancer IP. To do this use `type: LoadBalancer`
-Below is the example of creating a service with `type: LoadBalancer`
-
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: snappydata-locator-public
-  labels:
-    app: snappydata
-spec:
-  ports:
-  - port: 1527
-    targetPort: 1527
-    name: jdbc
-  - port: 10334
-    targetPort: 10334
-    name: locator
-  type: LoadBalancer
-  selector:
-    app: snappydata-locator
----
-```
-
-**Troubleshooting**
-
-If you are having trouble bringing up SnappyData Services, double check that your external IP is properly defined for your frontend Service, and that the firewall for your cluster nodes is open to port `1527, 10334, 8080, 5050`.
-
-**Accessing the SnappyData externally**
-
-You'll want to set up your SnappyData so that it can be accessed from outside of the internal Kubernetes network. Above, we introduced one way to do that, by setting `type: LoadBalancer` to Service `spec`.
-More generally, Kubernetes supports two ways of exposing a Service onto an external IP address: `NodePort`s and `LoadBalancer`s
-
-If the `LoadBalancer` specification is used, it can take a short period for an external IP to show up in `kubectl get services` output, but you should then see it listed as well, e.g. like this:
-
-```
-$ kubectl get services
-NAME                        CLUSTER-IP       EXTERNAL-IP       PORT(S)                                                   AGE
-kubernetes                  10.127.240.1     <none>            443/TCP                                                   29m
-snappydata-leader           None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-leader-public    10.127.246.173   130.211.155.29    5050/TCP                                                  3m
-snappydata-locator          None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-locator-public   10.127.252.128   104.198.247.10    1527/TCP,10334/TCP,                                       3m
-snappydata-server           None             <none>            26257/TCP,8080/TCP,10334/TCP,3768/TCP,1531/TCP,1527/TCP   3m
-snappydata-server-public    10.127.244.246   104.154.247.255   1527/TCP,10334/TCP                                        3m
-```
-
-Once you've exposed the service to an external IP, visit the IP to see SnappyData Service in action, i.e. `http://<EXTERNAL-IP>:<PORT>`.
-You should see a web page of Spark UI 
-<br><br>
-<p style="text-align: center;"><img alt="Refresh" src="images/kube-Image-6.png"></p>
-<br><br>
-
-#### Google Compute Engine External Load Balancer Specifics
-
-In Google Compute Engine, Kubernetes automatically creates forwarding rules for services with `LoadBalancer`.
-
-You can list the forwarding rules like this (the forwarding rule also indicates the external IP):
-
-```console
-$ gcloud compute forwarding-rules list
-NAME                              REGION       IP_ADDRESS       IP_PROTOCOL  TARGET
-a2e1b1d60c1f711e69ac442010af0011  us-central1  104.198.247.10   TCP          us-central1/targetPools/a2e1b1d60c1f711e69ac442010af0011
-a2e4a4293c1f711e69ac442010af0011  us-central1  104.154.247.255  TCP          us-central1/targetPools/a2e4a4293c1f711e69ac442010af0011
-a2e78d5b9c1f711e69ac442010af0011  us-central1  130.211.155.29   TCP          us-central1/targetPools/a2e78d5b9c1f711e69ac442010af0011
-aaaac7387b7d311e685a942010af0013  us-central1  104.154.154.72   TCP          us-central1/targetPools/aaaac7387b7d311e685a942010af0013
-accedf55bbd0f11e6ae3942010af001a  us-central1  104.197.154.176  TCP          us-central1/targetPools/accedf55bbd0f11e6ae3942010af001a
-acd1d2ce2bd0f11e6ae3942010af001a  us-central1  104.154.170.90   TCP          us-central1/targetPools/acd1d2ce2bd0f11e6ae3942010af001a
-ad60b6febb6e011e68c4b42010af0013  us-central1  104.197.152.3    TCP          us-central1/targetPools/ad60b6febb6e011e68c4b42010af0013
-```
-
-In Google Compute Engine, If you need to open the firewall for example port 8080 using the [console][cloud-console] or the `gcloud` tool. The following command will allow traffic from any source to instances tagged `kubernetes-node` (replace with your tags as appropriate):
-
-```console
-$ gcloud compute firewall-rules create --allow=tcp:8080 --target-tags=kubernetes-node kubernetes-node-8080
-```
-
-For GCE Kubernetes startup details, see the [Getting started on Google Compute Engine](../../docs/getting-started-guides/gce.md)
+To know more about launching SnappyData cluster on Kubernetes, check out our [Helm charts](https://github.com/SnappyDataInc/spark-on-k8s/tree/master/charts/snappydata).
