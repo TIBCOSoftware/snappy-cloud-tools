@@ -17,14 +17,15 @@
 #
 
 extract() {
-  TAR_NAME=`echo ${URL} | cut -d'/' -f 9`
+  # TAR_NAME=`echo ${URL} | cut -d'/' -f 9`
+  TAR_NAME="snappydata-1.0.2-bin.tar.gz"
   SNAPPY_HOME_DIR=`echo ${TAR_NAME%.tar.gz}`
   SNAPPY_HOME_DIR_NO_BIN=`echo ${SNAPPY_HOME_DIR%-bin}`
 
   if [[ ! -d ${SNAPPY_HOME_DIR} ]] && [[ ! -d ${SNAPPY_HOME_DIR_NO_BIN} ]]; then
     # Download and extract the distribution tar
     echo "Downloading ${URL}..."
-    wget -q "${URL}"
+    wget -q -O "${TAR_NAME}" "${URL}"
     tar -xf "${TAR_NAME}"
 
     rm -f "${TAR_NAME}" releases
@@ -35,7 +36,8 @@ extract() {
 }
 
 getLatestUrl() {
-  URL="https://github.com/SnappyDataInc/snappydata/releases/download/v1.0.1/snappydata-1.0.1-bin.tar.gz"
+  # URL="https://github.com/SnappyDataInc/snappydata/releases/download/v1.0.1/snappydata-1.0.1-bin.tar.gz"
+  URL="${SNAPPYDATA_TARBALL_URL}"
 }
 
 SNAPPY_HOME_DIR="snappydata-${SNAPPYDATA_VERSION}-bin"
@@ -64,6 +66,12 @@ else
   if [[ -d ${SNAPPY_HOME_DIR_NO_BIN} ]]; then
     SNAPPY_HOME_DIR=${SNAPPY_HOME_DIR_NO_BIN}
   fi
+fi
+
+if [[ ! -d ${SNAPPY_HOME_DIR} ]] && [[ -d "snappy" ]]; then
+  # If SNAPPY_HOME_DIR is still not set. it could be
+  # because of private builds with non standard names
+  SNAPPY_HOME_DIR="snappy"
 fi
 
 echo -e "export SNAPPY_HOME_DIR=${SNAPPY_HOME_DIR}" >> ec2-variables.sh
