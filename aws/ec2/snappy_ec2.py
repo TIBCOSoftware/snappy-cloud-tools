@@ -67,6 +67,7 @@ SNAPPYDATA_UI_PORT = ""
 LOCATOR_CLIENT_PORT = "1527"
 
 DEFAULT_SNAPPY_VERSION = "LATEST"
+DEFAULT_SNAPPY_BINARY = "https://github.com/SnappyDataInc/snappydata/releases/download/v1.0.2/snappydata-1.0.2-bin.tar.gz"
 
 # Amazon Linux AMIs 2016.09 for EBS-backed HVM
 HVM_AMI_MAP = {
