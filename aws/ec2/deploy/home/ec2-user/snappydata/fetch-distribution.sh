@@ -17,8 +17,7 @@
 #
 
 extract() {
-  # TAR_NAME=`echo ${URL} | cut -d'/' -f 9`
-  TAR_NAME="snappydata-1.0.2-bin.tar.gz"
+  TAR_NAME=`basename ${URL}`
   SNAPPY_HOME_DIR=`echo ${TAR_NAME%.tar.gz}`
   SNAPPY_HOME_DIR_NO_BIN=`echo ${SNAPPY_HOME_DIR%-bin}`
 
@@ -27,6 +26,7 @@ extract() {
     echo "Downloading ${URL}..."
     wget -q -O "${TAR_NAME}" "${URL}"
     tar -xf "${TAR_NAME}"
+    SNAPPY_HOME=`tar -tf "${TAR_NAME}" | head -1 | cut -d "/" -f1`
 
     rm -f "${TAR_NAME}" releases
   fi
@@ -68,10 +68,10 @@ else
   fi
 fi
 
-if [[ ! -d ${SNAPPY_HOME_DIR} ]] && [[ -d "snappy" ]]; then
+if [[ ! -d "${SNAPPY_HOME_DIR}" ]] && [[ -d "${SNAPPY_HOME}" ]]; then
   # If SNAPPY_HOME_DIR is still not set. it could be
   # because of private builds with non standard names
-  SNAPPY_HOME_DIR="snappy"
+  SNAPPY_HOME_DIR="$SNAPPY_HOME"
 fi
 
 echo -e "export SNAPPY_HOME_DIR=${SNAPPY_HOME_DIR}" >> ec2-variables.sh
