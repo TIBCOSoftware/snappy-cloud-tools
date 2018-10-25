@@ -50,6 +50,7 @@ import warnings
 from datetime import datetime
 from optparse import OptionParser
 from sys import stderr
+import requests
 
 if sys.version < "3":
     from urllib2 import urlopen, Request, HTTPError
@@ -60,7 +61,7 @@ else:
     xrange = range
 
 
-SNAPPY_EC2_VERSION = "0.8.1"
+SNAPPY_EC2_VERSION = "0.8.2"
 SNAPPY_EC2_DIR = os.path.dirname(os.path.realpath(__file__))
 SNAPPY_AWS_CONF_DIR = SNAPPY_EC2_DIR + "/deploy/home/ec2-user/snappydata"
 SNAPPYDATA_UI_PORT = ""
@@ -68,20 +69,23 @@ LOCATOR_CLIENT_PORT = "1527"
 
 DEFAULT_SNAPPY_VERSION = "LATEST"
 
-# Amazon Linux AMIs 2016.09 for EBS-backed HVM
+# Amazon Linux AMIs 2018.03 for EBS-backed HVM
 HVM_AMI_MAP = {
-    "ap-northeast-1": "ami-0c11b26d",
-    "ap-northeast-2": "ami-983ce8f6",
-    "ap-south-1": "ami-34b4c05b",
-    "ap-southeast-1": "ami-b953f2da",
-    "ap-southeast-2": "ami-db704cb8",
-    "eu-central-1": "ami-f9619996",
-    "eu-west-1": "ami-9398d3e0",
-    "sa-east-1": "ami-97831ffb",
-    "us-east-1": "ami-b73b63a0",
-    "us-east-2": "ami-58277d3d",
-    "us-west-1": "ami-23e8a343",
-    "us-west-2": "ami-5ec1673e"
+    "ap-northeast-1": "ami-06cd52961ce9f0d85",
+    "ap-northeast-2": "ami-0a10b2721688ce9d2",
+    "ap-south-1": "ami-0912f71e06545ad88",
+    "ap-southeast-1": "ami-08569b978cc4dfa10",
+    "ap-southeast-2": "ami-09b42976632b27e9b",
+    "ca-central-1": "ami-0b18956f",
+    "eu-central-1": "ami-0233214e13e500f77",
+    "eu-west-1": "ami-047bb4163c506cd98",
+    "eu-west-2": "ami-f976839e",
+    "eu-west-3": "ami-0ebc281c20e89ba4b",
+    "sa-east-1": "ami-07b14488da8ea02a0",
+    "us-east-1": "ami-0ff8a91507f77f867",
+    "us-east-2": "ami-0b59bfac6be064b78",
+    "us-west-1": "ami-0bdb828fd58c52235",
+    "us-west-2": "ami-a0cfeed8"
 }
 
 
@@ -200,7 +204,7 @@ def parse_args():
              "additional, named profiles by using this option (default: %default)")
     parser.add_option(
         "-t", "--instance-type", default="m4.large",
-        help="Type of instance to launch (default: %default). " +
+        help="Type of server and lead instance to launch (default: %default). " +
              "WARNING: must be 64-bit; small instances won't work")
     parser.add_option(
         "--locator-instance-type", default="t2.medium",
@@ -216,13 +220,26 @@ def parse_args():
     parser.add_option(
         "-a", "--ami",
         help="Amazon Machine Image ID to use")
-#    parser.add_option(
-#        "-v", "--snappydata-version", default=DEFAULT_SNAPPY_VERSION,
-#        help="Version of SnappyData to use: 'X.Y.Z' (default: %default)")
     parser.add_option(
-        "--enterprise", action="store_true", default=False,
-        help="(Will be supported soon) Use SnappyData Enterprise edition AMI from AWS Marketplace to launch the cluster. " +
-             "Overrides --ami option. Extra charges apply. (default: %default)")
+        "--snappydata-tarball", default="",
+        help="HTTP URL or local file path of the SnappyData distribution tarball with which the " +
+             "cluster will be launched. (default: %default)")
+    parser.add_option(
+        "--locator-conf", default="",
+        help="Configuration properties for locators (default: %default)")
+    parser.add_option(
+        "--server-conf", default="",
+        help="Configuration properties for servers (default: %default)")
+    parser.add_option(
+        "--lead-conf", default="",
+        help="Configuration properties for leads (default: %default)")
+    parser.add_option(
+        "-v", "--snappydata-version", default=DEFAULT_SNAPPY_VERSION,
+        help="Version of SnappyData to use: 'X.Y.Z' (default: %default)")
+    # parser.add_option(
+    #     "--enterprise", action="store_true", default=False,
+    #     help="(Not supported yet) Use SnappyData Enterprise edition AMI from AWS Marketplace to launch the cluster. " +
+    #          "Overrides --ami option. Extra charges apply. (default: %default)")
     parser.add_option(
         "--with-zeppelin", action="store_true", default=False,
         help="Launch Apache Zeppelin server with the cluster." + 
@@ -245,8 +262,14 @@ def parse_args():
         help="Resume installation on a previously launched cluster " +
              "(for debugging)")
     parser.add_option(
+        "--root-ebs-vol-size", metavar="SIZE", type="int", default=32,
+        help="Size (in GB) of root EBS volume for servers and leads. SnappyData is installed on root volume.")
+    parser.add_option(
+        "--root-ebs-vol-size-locator", metavar="SIZE", type="int", default=10,
+        help="Size (in GB) of root EBS volume for locators. SnappyData is installed on root volume.")
+    parser.add_option(
         "--ebs-vol-size", metavar="SIZE", type="int", default=0,
-        help="Size (in GB) of each EBS volume.")
+        help="Size (in GB) of each additional EBS volume to be attached.")
     parser.add_option(
         "--ebs-vol-type", default="standard",
         help="EBS volume type (e.g. 'gp2', 'standard').")
@@ -270,7 +293,7 @@ def parse_args():
         "-u", "--user", default="ec2-user",
         help="The SSH user you want to connect as (default: %default)")
     parser.add_option(
-        "--delete-groups", action="store_true", default=False,
+        "--delete-groups", action="store_true", default=True,
         help="When destroying a cluster, delete the security groups that were created")
     parser.add_option(
         "--use-existing-locator", action="store_true", default=False,
@@ -315,18 +338,18 @@ def parse_args():
         sys.exit(1)
     (action, cluster_name) = args
 
-    if opts.enterprise:
-        print("SnappyData Enterprise AMIs are available on AWS Marketplace.")
-        print("These will be supported by the EC2 scripts soon. Exiting the cluster %s process." % action)
-        sys.exit(1)
-        print("You selected SnappyData Enterprise edition AMI to launch the cluster {c}. " +
-        "It'll incur extra charges.".format(c=cluster_name))
-        print("Please read the terms of service here: http://www.snappydata.io/download/eula\n")
-        msg = "Enter y to continue if you have read and agree to above terms of service (y/N): "
-        response = raw_input(msg)
-        if response != "y":
-            print("Exiting the cluster launch process.")
-            sys.exit(1)
+    # if opts.enterprise:
+    #     print("SnappyData Enterprise AMIs are available on AWS Marketplace.")
+    #     print("These will be supported by the EC2 scripts soon. Exiting the cluster %s process." % action)
+    #     sys.exit(1)
+    #     print("You selected SnappyData Enterprise edition AMI to launch the cluster {c}. " +
+    #     "It'll incur extra charges.".format(c=cluster_name))
+    #     print("Please read the terms of service here: http://www.snappydata.io/download/eula\n")
+    #     msg = "Enter y to continue if you have read and agree to above terms of service (y/N): "
+    #     response = raw_input(msg)
+    #     if response != "y":
+    #         print("Exiting the cluster launch process.")
+    #         sys.exit(1)
 
     # Boto config check
     # http://boto.cloudhackers.com/en/latest/boto_config_tut.html
@@ -344,11 +367,38 @@ def parse_args():
                           file=stderr)
                     sys.exit(1)
 
-    if opts.with_zeppelin:
-        # print("Option --with-zeppelin specified. The latest SnappyData version will be used.")
-        opts.snappydata_version = "LATEST"
+    if opts.root_ebs_vol_size < 8 or opts.root_ebs_vol_size_locator < 8:
+        print("Minimum 8GB of root EBS volume size required. Exiting.")
+        sys.exit(1)
+
+    if opts.snappydata_tarball != "" and action in ("start", "launch"):
+        if not opts.snappydata_tarball.endswith(".tar.gz"):
+            print("The tarball format not recognised. It must be built with snappydata's gradle "
+                  + "tasks: 'distProduct' or 'distTar'. Exiting.")
+            sys.exit(1)
+        if opts.snappydata_tarball.startswith("/"):
+            if not os.path.isfile(opts.snappydata_tarball):
+                print("Provided path of the snappydata tarball (%s) is not valid. Exiting." % opts.snappydata_tarball)
+                sys.exit(1)
+        elif opts.snappydata_tarball.startswith("http"):
+            if not url_exists(opts.snappydata_tarball):
+                print("Provided url of the snappydata tarball (%s) is not accessible. Exiting." % opts.snappydata_tarball)
+                sys.exit(1)
+        else:
+            print("Provided path of the snappydata tarball (%s) not recognized. Exiting." % opts.snappydata_tarball)
+            sys.exit(1)
+
+    if opts.snappydata_version.startswith("0."):
+        print("Versions prior to 1.0.0 not supported. Exiting.")
+        sys.exit(1)
 
     return (opts, action, cluster_name)
+
+
+def url_exists(path):
+    r = requests.head(path)
+    return r.status_code in (requests.codes.ok, requests.codes.moved, requests.codes.found)
+    # Check also for requests.codes.moved and requests.codes.found?
 
 
 # Get the EC2 security group of the given name, creating it if it doesn't exist
@@ -431,12 +481,12 @@ def get_ami(opts):
         instance_type = "hvm"
         print("Don't recognize %s, assuming virtualization type is hvm" % opts.instance_type, file=stderr)
 
-    if opts.enterprise:
-        ami = SNAPPYDATA_AMI_MAP[opts.region]
-        print("Found SnappyData Enterprise AMI: " + ami)
-    else:
-        ami = HVM_AMI_MAP[opts.region]
-        print("Found AMI: " + ami)
+    # if opts.enterprise:
+    #     ami = SNAPPYDATA_AMI_MAP[opts.region]
+    #     print("Found SnappyData Enterprise AMI: " + ami)
+    # else:
+    ami = HVM_AMI_MAP[opts.region]
+    print("Found AMI: " + ami)
     return ami
 
 
@@ -637,7 +687,7 @@ def launch_cluster(conn, opts, cluster_name):
 
     # Figure out the AMI
     # TODO User provided AMI may not work.
-    if opts.ami is None or opts.enterprise:
+    if opts.ami is None: # or opts.enterprise:
         opts.ami = get_ami(opts)
 
     # we use group ids to work around https://github.com/boto/boto/issues/350
@@ -657,6 +707,16 @@ def launch_cluster(conn, opts, cluster_name):
     # Create block device mapping so that we can add EBS volumes if asked to.
     # The first drive is attached as /dev/sds, 2nd as /dev/sdt, ... /dev/sdz
     block_map = BlockDeviceMapping()
+    rootdevice_loc = EBSBlockDeviceType()
+    rootdevice_loc.size = opts.root_ebs_vol_size_locator
+    rootdevice_loc.volume_type = opts.ebs_vol_type
+    rootdevice_loc.delete_on_termination = True
+
+    rootdevice = EBSBlockDeviceType()
+    rootdevice.size = opts.root_ebs_vol_size
+    rootdevice.volume_type = opts.ebs_vol_type
+    rootdevice.delete_on_termination = True
+    block_map["/dev/xvda"] = rootdevice
     if opts.ebs_vol_size > 0:
         for i in range(opts.ebs_vol_num):
             device = EBSBlockDeviceType()
@@ -772,6 +832,7 @@ def launch_cluster(conn, opts, cluster_name):
                 inst.start()
         locator_nodes = existing_locators
     else:
+        block_map["/dev/xvda"] = rootdevice_loc
         zones = get_zones(conn, opts)
         num_zones = len(zones)
         i = 0
@@ -810,6 +871,7 @@ def launch_cluster(conn, opts, cluster_name):
     lead_nodes = []
     for zone in zones:
         num_leads_this_zone = get_partition(opts.leads, num_zones, i)
+        block_map["/dev/xvda"] = rootdevice
         if num_leads_this_zone > 0:
             lead_res = image.run(
                 key_name=opts.key_pair,
@@ -962,7 +1024,8 @@ def setup_cluster(conn, locator_nodes, lead_nodes, server_nodes, zeppelin_nodes,
         locator_nodes=locator_nodes,
         lead_nodes=lead_nodes,
         server_nodes=server_nodes,
-        zeppelin_nodes=zeppelin_nodes
+        zeppelin_nodes=zeppelin_nodes,
+        copyTarball=deploy_ssh_key
     )
 
     if opts.deploy_root_dir is not None:
@@ -980,13 +1043,11 @@ def setup_cluster(conn, locator_nodes, lead_nodes, server_nodes, zeppelin_nodes,
 
 
 def setup_snappy_cluster(master, opts):
-    ssh(master, opts, "chmod u+x snappydata/aws-setup.sh")
-    ssh(master, opts, "snappydata/aws-setup.sh")
+    ssh(master, opts, "chmod u+x snappydata/aws-setup.sh && snappydata/aws-setup.sh")
 
 
 def shutdown_snappy_cluster(master, opts):
-    ssh(master, opts, "chmod u+x snappydata/aws-shutdown.sh")
-    ssh(master, opts, "snappydata/aws-shutdown.sh")
+    ssh(master, opts, "chmod u+x snappydata/aws-shutdown.sh && snappydata/aws-shutdown.sh", 1)
 
 
 def is_ssh_available(host, opts, print_ssh_output=True):
@@ -1048,7 +1109,8 @@ def wait_for_cluster_state(conn, opts, cluster_instances, cluster_state):
     num_attempts = 0
 
     while True:
-        time.sleep(5 * num_attempts)  # seconds
+        # time.sleep(5 * num_attempts)  # seconds
+        time.sleep(10)  # seconds
 
         for i in cluster_instances:
             i.update()
@@ -1159,7 +1221,7 @@ def get_num_disks(instance_type):
 # script to be run on that instance to copy them to other nodes.
 #
 # root_dir should be an absolute path to the directory with the files we want to deploy.
-def deploy_files(conn, root_dir, opts, locator_nodes, lead_nodes, server_nodes, zeppelin_nodes):
+def deploy_files(conn, root_dir, opts, locator_nodes, lead_nodes, server_nodes, zeppelin_nodes, copyTarball):
     active_locator = get_dns_name(locator_nodes[0], opts.private_ips)
 
     num_disks = get_num_disks(opts.instance_type)
@@ -1177,6 +1239,9 @@ def deploy_files(conn, root_dir, opts, locator_nodes, lead_nodes, server_nodes, 
     locator_addresses = [get_dns_name(i, opts.private_ips) for i in locator_nodes]
     lead_addresses = [get_dns_name(i, opts.private_ips) for i in lead_nodes]
     server_addresses = [get_dns_name(i, opts.private_ips) for i in server_nodes]
+    locator_private_ips = [get_dns_name(i, True) for i in locator_nodes]
+    lead_private_ips = [get_dns_name(i, True) for i in lead_nodes]
+    server_private_ips = [get_dns_name(i, True) for i in server_nodes]
 
     zeppelin_address = "NONE"
     if opts.with_zeppelin:
@@ -1186,6 +1251,12 @@ def deploy_files(conn, root_dir, opts, locator_nodes, lead_nodes, server_nodes, 
         "locator_list": '\n'.join(locator_addresses),
         "lead_list": '\n'.join(lead_addresses),
         "server_list": '\n'.join(server_addresses),
+        "locator_private_ips": '\n'.join(locator_private_ips),
+        "lead_private_ips": '\n'.join(lead_private_ips),
+        "server_private_ips": '\n'.join(server_private_ips),
+        "locator_conf": opts.locator_conf,
+        "server_conf": opts.server_conf,
+        "lead_conf": opts.lead_conf,
         "zeppelin_server": zeppelin_address
     }
 
@@ -1197,6 +1268,10 @@ def deploy_files(conn, root_dir, opts, locator_nodes, lead_nodes, server_nodes, 
         template_vars["aws_secret_access_key"] = ""
 
     template_vars["locator_client_port"] = LOCATOR_CLIENT_PORT
+    if opts.snappydata_tarball != "" and opts.snappydata_tarball.startswith("http"):
+        template_vars["snappydata-tarball-url"] = opts.snappydata_tarball
+    else:
+        template_vars["snappydata-tarball-url"] = ""
 
     # Create a temp directory in which we will place all the files to be
     # deployed after we substitue template parameters in them
@@ -1222,10 +1297,14 @@ def deploy_files(conn, root_dir, opts, locator_nodes, lead_nodes, server_nodes, 
                                 text = text.replace("{{LEAD_" + str(idx) + "}}", lead_addresses[idx])
                             for idx in range(len(server_nodes)):
                                 text = text.replace("{{SERVER_" + str(idx) + "}}", server_addresses[idx])
-                            if opts.enterprise:
+                            if False: # opts.enterprise:
                                 text = text.replace("{{snappydata_version}}", "ENT")
                             else:
-                                text = text.replace("{{snappydata_version}}", "LATEST")
+                                text = text.replace("{{snappydata_version}}", opts.snappydata_version)
+                            if opts.snappydata_tarball.startswith("/"):
+                                text = text.replace("{{private_build_path}}", opts.snappydata_tarball)
+                            else:
+                                text = text.replace("{{private_build_path}}", 'NONE')
                             dest.write(text)
                             dest.close()
     # rsync the whole directory over to the locator instance
@@ -1236,6 +1315,17 @@ def deploy_files(conn, root_dir, opts, locator_nodes, lead_nodes, server_nodes, 
         "%s@%s:/" % (opts.user, active_locator)
     ]
     subprocess.check_call(command)
+    # Do not upload tarball in case this is "start" command.
+    if copyTarball:
+        if opts.snappydata_tarball.startswith("/"):
+            cmd = [
+                'rsync', '-v',
+                '-e', stringify_command(ssh_command(opts)),
+                "%s" % opts.snappydata_tarball,
+                "%s@%s:/home/%s/snappydata/" % (opts.user, active_locator, opts.user)
+            ]
+            print("Copying your local SnappyData tarball to AWS...")
+            subprocess.check_call(cmd)
     # Remove the temp directory we created above
     shutil.rmtree(tmp_dir)
 
@@ -1267,6 +1357,7 @@ def stringify_command(parts):
 def ssh_args(opts):
     parts = ['-o', 'StrictHostKeyChecking=no']
     parts += ['-o', 'UserKnownHostsFile=/dev/null']
+    parts += ['-o', 'LogLevel=error']
     if opts.identity_file is not None:
         parts += ['-i', opts.identity_file]
     return parts
@@ -1278,7 +1369,7 @@ def ssh_command(opts):
 
 # Run a command on a host through ssh, retrying up to five times
 # and then throwing an exception if ssh continues to fail.
-def ssh(host, opts, command):
+def ssh(host, opts, command, attempts=5):
     tries = 0
     while True:
         try:
@@ -1286,7 +1377,7 @@ def ssh(host, opts, command):
                 ssh_command(opts) + ['-t', '-t', '%s@%s' % (opts.user, host),
                                      stringify_command(command)])
         except subprocess.CalledProcessError as e:
-            if tries > 5:
+            if tries >= attempts:
                 # If this was an ssh failure, provide the user with hints.
                 if e.returncode == 255:
                     raise UsageError(
@@ -1473,8 +1564,7 @@ def real_main():
         if SNAPPYDATA_UI_PORT == "":
             SNAPPYDATA_UI_PORT = '5050'
         url = "http://%s:%s" % (lead, SNAPPYDATA_UI_PORT)
-        print("SnappyData Unified cluster started.")
-        print("  Access SnappyData Pulse UI at %s" % url)
+        print("SnappyData Unified cluster started. Access SnappyData Pulse UI at %s" % url)
         if opts.with_zeppelin:
             url = "http://%s:8080" % lead
             print("  Access Apache Zeppelin server at %s (it may take few seconds more to start accepting http requests)." % url)
@@ -1483,7 +1573,7 @@ def real_main():
 
     elif action == "destroy":
         (locator_nodes, lead_nodes, server_nodes, zeppelin_nodes) = get_existing_cluster(
-            conn, opts, cluster_name, die_on_error=False)
+            conn, opts, cluster_name, die_on_error=True)
 
         if any(locator_nodes + lead_nodes + server_nodes + zeppelin_nodes):
             print("The following instances will be terminated:")
@@ -1576,7 +1666,7 @@ def real_main():
             "Reboot cluster " + cluster_name + " (y/N): ")
         if response == "y":
             (locator_nodes, lead_nodes, server_nodes, zeppelin_nodes) = get_existing_cluster(
-                conn, opts, cluster_name, die_on_error=False)
+                conn, opts, cluster_name, die_on_error=True)
             shutdown_snappy_cluster(get_dns_name(locator_nodes[0], opts.private_ips), opts)
             print("Rebooting cluster instances...")
             cluster_instances=(locator_nodes + lead_nodes + server_nodes + zeppelin_nodes)
@@ -1620,7 +1710,7 @@ def real_main():
             "Stop cluster " + cluster_name + " (y/N): ")
         if response == "y":
             (locator_nodes, lead_nodes, server_nodes, zeppelin_nodes) = get_existing_cluster(
-                conn, opts, cluster_name, die_on_error=False)
+                conn, opts, cluster_name, die_on_error=True)
             print("Stopping the snappydata processes...")
             shutdown_snappy_cluster(get_dns_name(locator_nodes[0], opts.private_ips), opts)
 
@@ -1683,6 +1773,11 @@ def real_main():
         opts.instance_type = existing_store_type
 
         setup_cluster(conn, locator_nodes, lead_nodes, server_nodes, zeppelin_nodes, opts, False)
+        lead = get_dns_name(lead_nodes[0], opts.private_ips)
+        if SNAPPYDATA_UI_PORT == "":
+            SNAPPYDATA_UI_PORT = '5050'
+        url = "http://%s:%s" % (lead, SNAPPYDATA_UI_PORT)
+        print("SnappyData Unified cluster started. Access SnappyData Pulse UI at %s" % url)
 
     else:
         print("Invalid action: %s" % action, file=stderr)
