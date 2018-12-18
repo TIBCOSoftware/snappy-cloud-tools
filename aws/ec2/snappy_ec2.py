@@ -61,7 +61,7 @@ else:
     xrange = range
 
 
-SNAPPY_EC2_VERSION = "0.8.2"
+SNAPPY_EC2_VERSION = "0.8.2.1"
 SNAPPY_EC2_DIR = os.path.dirname(os.path.realpath(__file__))
 SNAPPY_AWS_CONF_DIR = SNAPPY_EC2_DIR + "/deploy/home/ec2-user/snappydata"
 SNAPPYDATA_UI_PORT = ""

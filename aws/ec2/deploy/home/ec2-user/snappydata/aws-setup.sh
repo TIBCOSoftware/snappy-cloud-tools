@@ -88,11 +88,12 @@ if [[ -e snappy-env.sh ]]; then
   mv snappy-env.sh "${SNAPPY_HOME_DIR}/conf/"
 fi
 
-sed "s/^/ -hostname-for-clients=/" locator_list > locator_hostnames_list
-sed "s/^/ -hostname-for-clients=/" server_list > server_hostnames_list
-
 ALL_CONF="${LOCATOR_CONF}${SERVER_CONF}${LEAD_CONF}"
-if [[ "${SETUP_EXISTS}" = "false" ]] || [[ "${ALL_CONF}" != "" ]]; then
+
+if [[ "${SETUP_EXISTS}" = "false" ]]; then
+  sed "s/^/ -hostname-for-clients=/" locator_list > locator_hostnames_list
+  sed "s/^/ -hostname-for-clients=/" server_list > server_hostnames_list
+
   paste -d '' locator_private_list locator_hostnames_list > "${SNAPPY_HOME_DIR}/conf/locators"
   paste -d '' server_private_list server_hostnames_list > "${SNAPPY_HOME_DIR}/conf/servers"
   cat lead_private_list > "${SNAPPY_HOME_DIR}/conf/leads"
@@ -107,7 +108,7 @@ if [[ "${SETUP_EXISTS}" = "false" ]] || [[ "${ALL_CONF}" != "" ]]; then
   # sed -i '/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/\([^ ]*\)\(.*\)$/\1\2 -hostname-for-clients=\1/}}' "${SNAPPY_HOME_DIR}/conf/locators"
 
   # Check if config options already specify -heap-size or -memory-size
-  echo "${SERVER_CONF} ${LEAD_CONF}" | grep -e "\-memory\-size\=" -e "\-heap\-size\="
+  echo "${SERVER_CONF} ${LEAD_CONF}" | grep -e "\-memory\-size\=" -e "\-heap\-size\=" > /dev/null
   HAS_MEMORY_SIZE=`echo $?`
 
   HEAPSTR=""
@@ -123,6 +124,12 @@ if [[ "${SETUP_EXISTS}" = "false" ]] || [[ "${ALL_CONF}" != "" ]]; then
     sed -i "/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/$/ ${HEAPSTR}/}}" "${SNAPPY_HOME_DIR}/conf/servers"
   fi
 else
+  if [[ "${ALL_CONF}" != "" ]]; then
+    sed -i "/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/$/ ${LOCATOR_CONF}/}}" "${SNAPPY_HOME_DIR}/conf/locators"
+    sed -i "/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/$/ ${SERVER_CONF}/}}" "${SNAPPY_HOME_DIR}/conf/servers"
+    sed -i "/^#/ ! {/\\$/ ! { /^[[:space:]]*$/ ! s/$/ ${LEAD_CONF}/}}" "${SNAPPY_HOME_DIR}/conf/leads"
+  fi
+
   # Update public hostname in the locators and servers conf files
   private=(${LOCATOR_PRIVATE_IPS// / })
   public=(${LOCATORS// / })
@@ -186,18 +193,20 @@ else
   done
   for loc in "$OTHER_LOCATORS"; do
     if [[ "${loc}" != "" ]]; then
-      ssh "$loc" "${SSH_OPTS}" "mkdir -p ~/snappydata"
-      scp -q "${SSH_OPTS}" aws-setup.sh aws-shutdown.sh ec2-variables.sh zeppelin-setup.sh fetch-distribution.sh "${loc}:~/snappydata"
+      ssh ${SSH_OPTS} "$loc" "mkdir -p ~/snappydata"
+      scp -q ${SSH_OPTS} aws-setup.sh aws-shutdown.sh ec2-variables.sh zeppelin-setup.sh fetch-distribution.sh "${loc}:~/snappydata"
     fi
   done
 fi
 echo "Configured the cluster."
 
 # Launch the SnappyData cluster
-bash "${SNAPPY_HOME_DIR}/sbin/snappy-start-all.sh"
-if [[ $? != 0 ]]; then
-  echo "Cluster start did not succeed."
+bash "${SNAPPY_HOME_DIR}/sbin/snappy-start-all.sh" > start-status.log
+grep "Error starting server" start-status.log
+if [[ $? = 0 ]]; then
+  echo "Cluster start did not succeed. See console output below for details."
   echo "    WARNING: Your EC2 instances may still be running!"
+  cat start-status.log
   exit 2
 fi
 
@@ -208,10 +217,10 @@ DIR=`dirname "$DIR"`
 # Setup and launch zeppelin, if configured.
 if [[ "${ZEPPELIN_HOST}" != "NONE" ]]; then
   for server in "$ZEPPELIN_HOST"; do
-    ssh "$server" "${SSH_OPTS}" "mkdir -p ~/snappydata"
-    scp -q "${SSH_OPTS}" ec2-variables.sh zeppelin-setup.sh fetch-distribution.sh "${server}:~/snappydata"
+    ssh ${SSH_OPTS} "$server" "mkdir -p ~/snappydata"
+    scp -q ${SSH_OPTS} ec2-variables.sh zeppelin-setup.sh fetch-distribution.sh "${server}:~/snappydata"
   done
-  ssh "$ZEPPELIN_HOST" -t -t "${SSH_OPTS}" "sh ${DIR}/zeppelin-setup.sh"
+  ssh ${SSH_OPTS} "$ZEPPELIN_HOST" -t -t "sh ${DIR}/zeppelin-setup.sh"
 fi
 
 popd > /dev/null
