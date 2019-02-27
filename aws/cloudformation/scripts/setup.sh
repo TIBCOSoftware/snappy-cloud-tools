@@ -70,10 +70,12 @@ MYRAM=`free -gt | grep Total | awk '{print $2}'`
 AVAIL=`echo $MYRAM \* 0.75 / 1 | bc`
 HEAP=`echo $AVAIL \* 0.25 / 1 | bc`
 HEAP=$(($HEAP < 8 ? 8 : $HEAP))
-# There are two servers in the same instance.
-HEAP=`echo $HEAP \* 0.5 / 1 | bc`
 HEAP=$(($HEAP > 12 ? 12 : $HEAP))
 OFFHEAP=`echo $AVAIL - $HEAP | bc`
+# There are two servers in the same instance.
+HEAP=`echo $HEAP \* 0.5 / 1 | bc`
+OFFHEAP=`echo OFFHEAP \* 0.5 / 1 | bc`
+
 echo "RAM: $MYRAM, considered: $AVAIL, heap: $HEAP, off-heap: $OFFHEAP" >> memory-breakup.txt
 HEAPSTR="-heap-size=${HEAP}g"
 
