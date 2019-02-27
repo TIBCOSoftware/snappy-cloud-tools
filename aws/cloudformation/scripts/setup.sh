@@ -67,9 +67,12 @@ find ${ZEPPELIN_DIR}/notebook -type f -print0 | xargs -0 sed -i "s/localhost/${P
 # Calculate heap and off-heap sizes.
 # Set heap to be 8GB or 1/4th of considered memory, whichever is higher. Remaining for off-heap.
 MYRAM=`free -gt | grep Total | awk '{print $2}'`
-AVAIL=`echo $MYRAM \* 0.9 / 1 | bc`
+AVAIL=`echo $MYRAM \* 0.75 / 1 | bc`
 HEAP=`echo $AVAIL \* 0.25 / 1 | bc`
 HEAP=$(($HEAP < 8 ? 8 : $HEAP))
+# There are two servers in the same instance.
+HEAP=`echo $HEAP \* 0.5 / 1 | bc`
+HEAP=$(($HEAP > 12 ? 12 : $HEAP))
 OFFHEAP=`echo $AVAIL - $HEAP | bc`
 echo "RAM: $MYRAM, considered: $AVAIL, heap: $HEAP, off-heap: $OFFHEAP" >> memory-breakup.txt
 HEAPSTR="-heap-size=${HEAP}g"
@@ -84,7 +87,7 @@ fi
 printf "${PRIVATE_IP} -client-bind-address=${PRIVATE_IP} -hostname-for-clients=${PUBLIC_HOSTNAME} \n"  > ${SNAPPYDATA_DIR}/conf/locators
 printf "${PRIVATE_IP} -locators=${PRIVATE_IP}:10334 -client-bind-address=${PRIVATE_IP} -hostname-for-clients=${PUBLIC_HOSTNAME} ${HEAPSTR} ${OFFHEAPSTR} \n" > ${SNAPPYDATA_DIR}/conf/servers
 printf "${PRIVATE_IP} -locators=${PRIVATE_IP}:10334 -client-bind-address=${PRIVATE_IP} -hostname-for-clients=${PUBLIC_HOSTNAME} ${HEAPSTR} ${OFFHEAPSTR} \n" >> ${SNAPPYDATA_DIR}/conf/servers
-printf "${PRIVATE_IP} -locators=${PRIVATE_IP}:10334 -zeppelin.interpreter.enable=true -classpath=${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ${HEAPSTR} ${OFFHEAPSTR} \n" > ${SNAPPYDATA_DIR}/conf/leads
+printf "${PRIVATE_IP} -locators=${PRIVATE_IP}:10334 -zeppelin.interpreter.enable=true -classpath=${SNAPPY_INTERPRETER_DIR}/${INTERPRETER_JAR_NAME} ${HEAPSTR} \n" > ${SNAPPYDATA_DIR}/conf/leads
 printf "# `date` Configured SnappyData cluster $?\n" >> status.log
 
 # Assumes that aws jars are available in snappydata jars/ directory in the AMI. Else download them.
