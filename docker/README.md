@@ -26,7 +26,7 @@ Before you begin, ensure that:
  **For Linux**
 
  ```
- $ docker run -itd --net=host --name snappydata snappydatainc/snappydata start all
+ $ docker run -itd --net=host --name snappydata snappydatainc/snappydata:1.0.3-build.2 start all
  ```
  **For Mac OS**
 
@@ -36,7 +36,7 @@ Before you begin, ensure that:
  Run the following command to start SnappyData Cluster on Mac OS:
 
  ```
- docker run -d --name=snappydata -p 5050:5050 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata start all -hostname-for-clients=<Machine_IP/Public_IP>
+ docker run -d --name=snappydata -p 5050:5050 -p 1527:1527 -p 1528:1528 snappydatainc/snappydata:1.0.3-build.2 start all -hostname-for-clients=<Machine_IP/Public_IP>
  ```
  The `-hostname-for-clients` parameter sets the IP Address or Host name that this server listens on for client connections. The command may take some time to complete execution.
 
@@ -96,11 +96,11 @@ SnappyData Leader pid: 420 status: running
 
  ```
  snappy> show members;
- ID                                  |HOST                          |KIND                          |STATUS              |THRIFTSERVERS                 |SERVERGROUPS                  
- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- 127.0.0.1(131:locator)<ec><v0>:37815|localhost                     |locator(normal)               |RUNNING             |localhost/127.0.0.1[1527]     |                              
- 127.0.0.1(267)<v1>:13054            |localhost                     |datastore(normal)             |RUNNING             |localhost/127.0.0.1[1528]     |                              
- 127.0.0.1(420)<v2>:6067             |localhost                     |accessor(normal)              |RUNNING             |                              |IMPLICIT_LEADER_SERVERGROUP   
+ ID                                  |HOST                          |KIND                  |STATUS              |THRIFTSERVERS                 |SERVERGROUPS
+ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 127.0.0.1(131:locator)<ec><v0>:37815|localhost                     |locator               |RUNNING             |10.97.123.181/0.0.0.0[1527]   |
+ 127.0.0.1(267)<v1>:13054            |localhost                     |datastore             |RUNNING             |10.97.123.181/0.0.0.0[1528]   |
+ 127.0.0.1(420)<v2>:6067             |localhost                     |primary lead          |RUNNING             |                              |IMPLICIT_LEADER_SERVERGROUP
  
  3 rows selected
  ```

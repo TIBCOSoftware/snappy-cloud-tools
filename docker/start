@@ -130,7 +130,11 @@ case "$PROCESS_NAME" in
       ${PRODUCT_DIR}/sbin/snappy-leads.sh start
       ;;
    all)
-      ${PRODUCT_DIR}/sbin/snappy-start-all.sh -client-bind-address=0.0.0.0 -prefer-netserver-ipaddress=true "$@"
+      # Appending $@ to all conf files is risky. Assuming users only pass -hostname-for-clients and -snappydata.hiveServer.enabled=true params.
+      echo "localhost -client-bind-address=0.0.0.0 -prefer-netserver-ipaddress=true $@" > ${PRODUCT_DIR}/conf/locators
+      echo "localhost -client-bind-address=0.0.0.0 -prefer-netserver-ipaddress=true $@" > ${PRODUCT_DIR}/conf/servers
+      echo "localhost $@" > ${PRODUCT_DIR}/conf/leads
+      ${PRODUCT_DIR}/sbin/snappy-start-all.sh
       ;;
    * )
    echo "Usage: start (locator|server|lead|all) [--get-ip service-name] [--wait-for service-name service-port] [<snappy-config> ...]"
