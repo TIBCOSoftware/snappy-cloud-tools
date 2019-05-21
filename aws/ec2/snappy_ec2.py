@@ -154,17 +154,19 @@ def setup_external_libs(libs):
 # Only PyPI libraries are supported.
 external_libs = [
     {
-        "name": "boto",
-        "version": "2.34.0",
-        "md5": "5556223d2d0cc4d06dd4829e671dcecd"
+        "name": "boto3",
+        "version": "1.0.0",
+        "md5": "bd68e7cc413563e2ce9af2fc2b68d458"
     }
 ]
 
 setup_external_libs(external_libs)
 
-import boto
+import boto3
+import boto.ec2
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, BlockDeviceType, EBSBlockDeviceType
 from boto import ec2
+from boto3.session import Session
 
 import webbrowser
 
@@ -331,6 +333,16 @@ def parse_args():
     parser.add_option(
         "--instance-profile-name", default=None,
         help="IAM profile name to launch instances under")
+    parser.add_option(
+        "--assume-role-arn", type="string", default=None,
+        help="ARN of assumed role to launch a instance")
+    parser.add_option(
+        "--assume-role-timeout", type="int", default=3600,
+        help="Session timeout of the assumed role, min is 900 seconds and max is 3600 seconds")
+    parser.add_option(
+        "--assume-role-session-name", type="string", default=datetime.now().strftime("%m%d%Y%H%M%S"),
+        help="Session name for the assume role.")
+
 
     (opts, args) = parser.parse_args()
     if len(args) != 2:
@@ -1527,11 +1539,30 @@ def real_main():
               "on the local file system", file=stderr)
         sys.exit(1)
 
+    if not (opts.assume_role_arn is None):    
+        sts_client = boto3.client('sts')
+        response = sts_client.assume_role(
+            DurationSeconds=opts.assume_role_timeout,
+            RoleArn=opts.assume_role_arn,
+            RoleSessionName=opts.assume_role_session_name)
+    
     try:
         if opts.profile is None:
-            conn = ec2.connect_to_region(opts.region)
+            if opts.assume_role_arn is None:
+                conn = ec2.connect_to_region(opts.region)
+            else:
+                conn = boto.ec2.connect_to_region(opts.region, aws_access_key_id=response['Credentials']['AccessKeyId'], 
+                        aws_secret_access_key=response['Credentials']['SecretAccessKey'],
+                        security_token=response['Credentials']['SessionToken'])
         else:
-            conn = ec2.connect_to_region(opts.region, profile_name=opts.profile)
+            if opts.assume_role_arn is None:
+                conn = ec2.connect_to_region(opts.region, profile_name=opts.profile)
+            else:
+                conn = boto.ec2.connect_to_region(opts.region, profile_name=opts.profile, 
+                        aws_access_key_id=response['Credentials']['AccessKeyId'], 
+                        aws_secret_access_key=response['Credentials']['SecretAccessKey'],
+                        security_token=response['Credentials']['SessionToken'])
+            
     except Exception as e:
         print((e), file=stderr)
         sys.exit(1)
