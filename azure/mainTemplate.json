@@ -4,7 +4,7 @@
   "parameters": {
     "artifactsBaseUrl": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/snappydatainc/snappy-cloud-tools/master",
+      "defaultValue": "https://raw.githubusercontent.com/snappydatainc/snappy-cloud-tools/master/azure",
       "metadata": {
         "description": "Base URL for artifacts such as nested templates and scripts",
         "artifactsBaseUrl": ""
@@ -251,9 +251,7 @@
       }
     },
     "baseUrl": "[concat(parameters('artifactsBaseUrl'),'/')]",
-    "templateUrlStartSnappyData": "[concat(variables('baseUrl'),'startSnappyData.json')]",
     "scriptUrlInit": "[concat(variables('baseUrl'),'init.sh')]",
-    "scriptUrlStartSnappyData": "[concat(variables('baseUrl'),'start_snappydata.sh')]",
     "virtualNetworkName": "[concat(parameters('clusterName'),'-vnet')]",
     "addressPrefix": "10.0.0.0/16",
     "subnetData": "subnet-data",

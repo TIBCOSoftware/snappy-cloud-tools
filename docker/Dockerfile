@@ -1,4 +1,4 @@
-FROM tianon/centos
+FROM centos:centos6
 
 MAINTAINER SnappyData, Inc.
 
@@ -6,13 +6,12 @@ USER root
 
 RUN yum -y install epel-release nss_wrapper gettext && \
     yum -y install curl which tar sudo openssh-server openssh-clients passwd supervisor bind-utils nc wget && \
-    yum -y -q install java-1.8.0-openjdk && \
+    yum -y install java-1.8.0-openjdk && \
     yum clean all -y
 
 RUN ssh-keygen -q -N "" -t rsa -f /root/.ssh/id_rsa && \
     cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 
-ENV JAVA_HOME /usr/java/default
 ENV PATH $PATH:$JAVA_HOME/bin
 
 # Modify the url of the SnappyData tarball with your tarball and also the corresponding extracted directory name.
