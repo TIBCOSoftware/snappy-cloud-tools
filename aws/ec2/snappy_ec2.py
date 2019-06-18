@@ -244,7 +244,7 @@ def parse_args():
     #          "Overrides --ami option. Extra charges apply. (default: %default)")
     parser.add_option(
         "--with-zeppelin", action="store_true", default=False,
-        help="Launch Apache Zeppelin server with the cluster." + 
+        help="Launch Apache Zeppelin server with the cluster." +
              " It'll be launched on the same instance where lead node will be running.")
     parser.add_option(
         "--deploy-root-dir",
@@ -335,13 +335,13 @@ def parse_args():
         help="IAM profile name to launch instances under")
     parser.add_option(
         "--assume-role-arn", type="string", default=None,
-        help="ARN of assumed role to launch a instance")
+        help="ARN of the IAM role to assume. This IAM role's credentials will be used to launch the cluster.")
     parser.add_option(
         "--assume-role-timeout", type="int", default=3600,
-        help="Session timeout of the assumed role, min is 900 seconds and max is 3600 seconds")
+        help="Timeout in seconds for the temporary credentials of the assumed IAM role, min is 900 seconds and max is 3600 seconds")
     parser.add_option(
         "--assume-role-session-name", type="string", default=datetime.now().strftime("%m%d%Y%H%M%S"),
-        help="Session name for the assume role.")
+        help="Name of this session in which this IAM role is assumed by the user.")
 
 
     (opts, args) = parser.parse_args()
@@ -1539,30 +1539,30 @@ def real_main():
               "on the local file system", file=stderr)
         sys.exit(1)
 
-    if not (opts.assume_role_arn is None):    
+    if not (opts.assume_role_arn is None):
         sts_client = boto3.client('sts')
         response = sts_client.assume_role(
             DurationSeconds=opts.assume_role_timeout,
             RoleArn=opts.assume_role_arn,
             RoleSessionName=opts.assume_role_session_name)
-    
+
     try:
         if opts.profile is None:
             if opts.assume_role_arn is None:
                 conn = ec2.connect_to_region(opts.region)
             else:
-                conn = boto.ec2.connect_to_region(opts.region, aws_access_key_id=response['Credentials']['AccessKeyId'], 
+                conn = boto.ec2.connect_to_region(opts.region, aws_access_key_id=response['Credentials']['AccessKeyId'],
                         aws_secret_access_key=response['Credentials']['SecretAccessKey'],
                         security_token=response['Credentials']['SessionToken'])
         else:
             if opts.assume_role_arn is None:
                 conn = ec2.connect_to_region(opts.region, profile_name=opts.profile)
             else:
-                conn = boto.ec2.connect_to_region(opts.region, profile_name=opts.profile, 
-                        aws_access_key_id=response['Credentials']['AccessKeyId'], 
+                conn = boto.ec2.connect_to_region(opts.region, profile_name=opts.profile,
+                        aws_access_key_id=response['Credentials']['AccessKeyId'],
                         aws_secret_access_key=response['Credentials']['SecretAccessKey'],
                         security_token=response['Credentials']['SessionToken'])
-            
+
     except Exception as e:
         print((e), file=stderr)
         sys.exit(1)
