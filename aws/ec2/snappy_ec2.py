@@ -61,7 +61,7 @@ else:
     xrange = range
 
 
-SNAPPY_EC2_VERSION = "0.8.2.1"
+SNAPPY_EC2_VERSION = "0.8.2.2"
 SNAPPY_EC2_DIR = os.path.dirname(os.path.realpath(__file__))
 SNAPPY_AWS_CONF_DIR = SNAPPY_EC2_DIR + "/deploy/home/ec2-user/snappydata"
 SNAPPYDATA_UI_PORT = ""
@@ -157,6 +157,11 @@ external_libs = [
         "name": "boto3",
         "version": "1.0.0",
         "md5": "bd68e7cc413563e2ce9af2fc2b68d458"
+    },
+    {
+        "name": "boto",
+        "version": "2.34.0",
+        "md5": "5556223d2d0cc4d06dd4829e671dcecd"
     }
 ]
 
