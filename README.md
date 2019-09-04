@@ -12,3 +12,7 @@ Disclaimer: This repo is still work-in-progress.
 ## SnappyData with Docker
 
 Read about running SnappyData cluster on docker [here](docker). 
+
+## SnappyData on Azure
+
+We have provided a sample JSON template and a script to quickly launch a SnappyData (OSS) cluster on Azure. [Read more](azure).

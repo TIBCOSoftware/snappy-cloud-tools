@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # init.sh -t NODETYPE -c DATASTORENODECOUNT -l LOCATORHOSTNAME -u BASEURL -a ADMINUSER -n LOCATORNODECOUNT -z LAUNCHZEPPELIN -f CONFPARAMETERS
-# sh init.sh -t locator -s snappydata-lead-kiuvz2l47tcpw0.eastasia.cloudapp.azure.com -c 3 -l sd-locator1 -u https://raw.githubusercontent.com/snappydatainc/snappy-cloud-tools/master -a azureuser -n 1 -z yes -f -heap-size=4g -d https://github.com/SnappyDataInc/snappydata/releases/download/v1.0.2.1/snappydata-1.0.2.1-bin.tar.gz
+# sh init.sh -t locator -s snappydata-lead-kiuvz2l47tcpw0.eastasia.cloudapp.azure.com -c 3 -l sd-locator1 -u https://raw.githubusercontent.com/snappydatainc/snappy-cloud-tools/master -a azureuser -n 1 -z yes -f -heap-size=4g -d https://github.com/SnappyDataInc/snappydata/releases/download/v1.1.1/snappydata-1.1.1-bin.tar.gz
 
 log()
 {
@@ -106,13 +106,13 @@ install_zeppelin()
   log "Copying sample notebooks ..."
   cp -ar "${ZEP_NOTEBOOKS_DIR}/." "${Z_DIR}/${ZEP_NOTEBOOKS_DIR}/"
 
-  # download zeppelin interpreter 0.7.3.4 for snappydata
-  ZEP_INTP_JAR="snappydata-zeppelin_2.11-0.7.3.4.jar"
-  INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.7.3.4/${ZEP_INTP_JAR}"
+  # download zeppelin interpreter 0.7.3.6 for snappydata
+  ZEP_INTP_JAR="snappydata-zeppelin_2.11-0.7.3.6.jar"
+  INTERPRETER_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/releases/download/v0.7.3.6/${ZEP_INTP_JAR}"
   wget -q "${INTERPRETER_URL}"
   mv "${ZEP_INTP_JAR}" "${DIR}/"
 
-  ${Z_DIR}/bin/install-interpreter.sh --name snappydata --artifact io.snappydata:snappydata-zeppelin:0.7.3.4
+  ${Z_DIR}/bin/install-interpreter.sh --name snappydata --artifact io.snappydata:snappydata-zeppelin:0.7.3.6
 
   # Modify conf/zeppelin-site.xml to include classnames of snappydata interpreters.
   cp "${Z_DIR}/conf/zeppelin-site.xml.template" "${Z_DIR}/conf/zeppelin-site.xml"
@@ -151,7 +151,7 @@ yum update -y curl
 export DIR=/opt/snappydata
 
 # Get the latest snappydata distribution, if SNAPPYDATADOWNLOADURL is empty.
-SNAPPY_URL="https://github.com/SnappyDataInc/snappydata/releases/download/v1.0.2.1/snappydata-1.0.2.1-bin.tar.gz"
+SNAPPY_URL="https://github.com/SnappyDataInc/snappydata/releases/download/v1.1.1/snappydata-1.1.1-bin.tar.gz"
 if [[ ! -z ${SNAPPYDATADOWNLOADURL} ]]; then
   # Check if the URL provided is valid or not.
   if curl --output /dev/null --silent --head --fail "$SNAPPYDATADOWNLOADURL"; then

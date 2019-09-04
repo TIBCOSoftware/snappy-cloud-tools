@@ -40,7 +40,7 @@ extract() {
 }
 
 getLatestUrl() {
-  URL="https://github.com/SnappyDataInc/snappydata/releases/download/v1.0.2/snappydata-1.0.2-bin.tar.gz"
+  URL="https://github.com/SnappyDataInc/snappydata/releases/download/v1.1.1/snappydata-1.1.1-bin.tar.gz"
   if [[ "${SNAPPYDATA_TARBALL_URL}" != "" ]]; then
     URL="${SNAPPYDATA_TARBALL_URL}"
   else
