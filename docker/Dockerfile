@@ -1,6 +1,6 @@
 FROM centos:centos6
 
-MAINTAINER SnappyData, Inc.
+MAINTAINER TIBCO Software Inc.
 
 USER root
 
@@ -14,15 +14,15 @@ RUN ssh-keygen -q -N "" -t rsa -f /root/.ssh/id_rsa && \
 
 ENV PATH $PATH:$JAVA_HOME/bin
 
-ARG URL=https://github.com/SnappyDataInc/snappydata/releases/download/v1.1.1/snappydata-1.1.1-bin.tar.gz 
+ARG TARFILE_LOC=https://github.com/SnappyDataInc/snappydata/releases/download/v1.1.1/snappydata-1.1.1-bin.tar.gz 
 
 RUN mkdir -p /opt/tmp-build/ /opt/tmp-extrd/
 
-ADD ${URL} /opt/tmp-build/ 
+ADD ${TARFILE_LOC} /opt/tmp-build/ 
 
 RUN export build_dir=$(ls /opt/tmp-build/) && \
     echo ${build_dir} | grep "tar.gz" && \
-    [ $? -eq 0 ] && tar -C /opt/tmp-extrd -xf /opt/tmp-build/${build_dir}  || cp -R /opt/tmp-build/${build_dir} /opt/tmp-extrd/ && \
+    tar -C /opt/tmp-extrd -xf /opt/tmp-build/${build_dir}  || mv /opt/tmp-build/${build_dir} /opt/tmp-extrd/${build_dir} && \
     export build_dir=$(ls /opt/tmp-extrd/) && \
     mv /opt/tmp-extrd/${build_dir} /opt/snappydata && \
     wget -q -O /opt/snappydata/jars/gcs-connector-latest-hadoop2.jar https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-latest-hadoop2.jar && \
