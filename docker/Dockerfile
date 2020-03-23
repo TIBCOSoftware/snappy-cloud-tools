@@ -14,7 +14,7 @@ RUN ssh-keygen -q -N "" -t rsa -f /root/.ssh/id_rsa && \
 
 ENV PATH $PATH:$JAVA_HOME/bin
 
-ARG TARFILE_LOC=https://github.com/SnappyDataInc/snappydata/releases/download/v1.1.1/snappydata-1.1.1-bin.tar.gz 
+ARG TARFILE_LOC=https://github.com/SnappyDataInc/snappydata/releases/download/v1.2.0/snappydata-1.2.0-bin.tar.gz
 
 RUN mkdir -p /opt/tmp-build/ /opt/tmp-extrd/
 

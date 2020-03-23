@@ -39,7 +39,7 @@ FIRST_LEAD=`cat lead_list | sed -n '1p'`
 ZEP_VERSION="0.7.3"
 ZEP_DIR="zeppelin-${ZEP_VERSION}-bin-netinst"
 ZEP_URL_MIRROR="http://archive.apache.org/dist/zeppelin/zeppelin-${ZEP_VERSION}/${ZEP_DIR}.tgz"
-ZEP_NOTEBOOKS_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/raw/notes/examples/notebook"
+ZEP_NOTEBOOKS_URL="https://github.com/SnappyDataInc/zeppelin-interpreter/raw/master/examples/notebook/notebooks_embedded_zeppelin.tar.gz"
 ZEP_NOTEBOOKS_DIR="notebook"
 PUBLIC_HOSTNAME=`wget -q -O - http://169.254.169.254/latest/meta-data/public-hostname`
 
